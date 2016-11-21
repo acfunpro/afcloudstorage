@@ -5,7 +5,7 @@ namespace acfunpro\afcloudstorage;
 /*
  *      CCloudStorageConst
  */
-class CCloudStorageConst
+class AfCloudStorageConst
 {
 	//
 	//	common error codes
