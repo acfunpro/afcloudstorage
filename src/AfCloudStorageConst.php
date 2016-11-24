@@ -7,13 +7,51 @@ namespace acfunpro\afcloudstorage;
  */
 class AfCloudStorageConst
 {
+    static public $m_str_LogTablesNmae   = '_LogTables';
+    static public $m_str_SetupTablesNmae = '_SetupTables';
+    static public $m_arr_SetupTablesList = array(
+        '_Table',      // 表名
+        '_Column',     // 列名
+        '_Type',       // 类型
+        '_Default',    // 默认值
+        '_Describe',   // 描述
+        '_Verify',     // 验证规则
+        '_Display',    // 客户端不可见
+    );
+    static public $m_arr_SetupTablesListType = array(
+        '_Table'      =>    'str',  // 表名
+        '_Column'     =>    'str',  // 列名
+        '_Type'       =>    'str',  // 类型
+        '_Default'    =>    'str',  // 默认值
+        '_Describe'   =>    'str',  // 描述
+        '_Verify'     =>    'str',  // 验证规则
+        '_Display'    =>    'int',  // 客户端不可见
+    );
+    static public $m_arr_SetupTablesListRule = array(
+        '_Table'      =>    'required', // 表名
+        '_Column'     =>    'required', // 列名
+        '_Type'       =>    'required', // 类型
+        '_Default'    =>    '',         // 默认值
+        '_Describe'   =>    'required', // 描述
+        '_Verify'     =>    '',         // 验证规则
+        '_Display'    =>    'required|number', // 客户端不可见
+    );
+    static public $m_arr_SetupTablesListDesc = array(
+        '_Table'      =>    '表名',        // 表名
+        '_Column'     =>    '列名',        // 列名
+        '_Type'       =>    '类型',        // 类型
+        '_Default'    =>    '默认值',      // 默认值
+        '_Describe'   =>    '描述',        // 描述
+        '_Verify'     =>    '验证规则',     // 验证规则
+        '_Display'    =>    '客户端不可见',  // 客户端不可见
+    );
 	//
 	//	common error codes
 	//
-	const ERROR_SUCCESS			    = 0;            //      successfully
+	const ERROR_SUCCESS			            = 0;            //      successfully
+    const ERROR_ACCESS_CLASS_NO_EXIST		= -100001;      //      access class no exist
+    const ERROR_ACCESS_EXEC_ERROR		    = -100010;      //      access exec error
 
-	const ERROR_UNKNOWN			    = -100000;      //      unknown errors
-	const ERROR_ACCESS_DENIED		= -100001;      //      access denied
 }
 
 ?>
