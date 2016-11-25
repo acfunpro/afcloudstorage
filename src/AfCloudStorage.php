@@ -763,7 +763,7 @@ class AfCloudStorage
     {
         DB::collection( AfCloudStorageConst::$m_str_LogTablesName.date('_Y-m-d-H', time()) )
             ->insert([
-                        'ip'         => CLib::GetClientIP( true, true ),
+                        'ip'         => CLib::GetClientIP( false, false ),
                         'url'        => Request::getRequestUri(),
                         'waiting'    => intval((microtime(true)-LARAVEL_START)*1000),
                         'class'      => $this->m_sDBTableName,
