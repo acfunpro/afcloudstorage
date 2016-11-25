@@ -7,8 +7,8 @@ namespace acfunpro\afcloudstorage;
  */
 class AfCloudStorageConst
 {
-    static public $m_str_LogTablesNmae   = '_LogTables';
-    static public $m_str_SetupTablesNmae = '_SetupTables';
+    static public $m_str_LogTablesName   = '_LogTables';
+    static public $m_str_SetupTablesName = '_SetupTables';
     static public $m_arr_SetupTablesList = array(
         '_Table',      // 表名
         '_Column',     // 列名
@@ -16,6 +16,7 @@ class AfCloudStorageConst
         '_Default',    // 默认值
         '_Describe',   // 描述
         '_Verify',     // 验证规则
+        '_Sort',       // 排序
         '_Display',    // 客户端不可见
     );
     static public $m_arr_SetupTablesListType = array(
@@ -25,6 +26,7 @@ class AfCloudStorageConst
         '_Default'    =>    'str',  // 默认值
         '_Describe'   =>    'str',  // 描述
         '_Verify'     =>    'str',  // 验证规则
+        '_Sort'       =>    'int',  // 排序
         '_Display'    =>    'int',  // 客户端不可见
     );
     static public $m_arr_SetupTablesListRule = array(
@@ -34,7 +36,8 @@ class AfCloudStorageConst
         '_Default'    =>    '',         // 默认值
         '_Describe'   =>    'required', // 描述
         '_Verify'     =>    '',         // 验证规则
-        '_Display'    =>    'required|number', // 客户端不可见
+        '_Sort'       =>    'number',   // 排序
+        '_Display'    =>    'number',   // 客户端不可见
     );
     static public $m_arr_SetupTablesListDesc = array(
         '_Table'      =>    '表名',        // 表名
@@ -43,6 +46,7 @@ class AfCloudStorageConst
         '_Default'    =>    '默认值',      // 默认值
         '_Describe'   =>    '描述',        // 描述
         '_Verify'     =>    '验证规则',     // 验证规则
+        '_Sort'       =>    '排序',        // 排序
         '_Display'    =>    '客户端不可见',  // 客户端不可见
     );
 	//
