@@ -110,6 +110,9 @@
         _Display    =>    int  // 客户端不可见
     
    	// 配置表字段验证规则
+   		// 目前仅支持 非空验证  (required)
+   						数字验证   (number)
+   						手机号验证 (phone)
         _Table      =>    required // 表名
         _Column     =>    required // 列名
         _Type       =>    required // 类型
