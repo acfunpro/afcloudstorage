@@ -23,7 +23,7 @@
 		"dekuan/delib" : ">=1.0",
 		"dekuan/vdata" : ">=1.0",
 		"jenssegers/mongodb": "^3.1",
-		"mews/purifier": "^2.0",
+		"mews/purifier": "^2.0"
 	},
 	"autoload" :
 	{
