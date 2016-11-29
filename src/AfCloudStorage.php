@@ -424,7 +424,7 @@ class AfCloudStorage
             {
                 if( '' === @$postData[ $sKey ] && '' !== @$arrDataDefault[ $sKey ] )
                 {
-                    $postData[ $sKey ] = $arrDataDefault[ $sKey ];
+                    $postData[ $sKey ] = @$arrDataDefault[ $sKey ];
                 }
                 elseif( 'required' == $sSVal && '' == @$postData[ $sKey ] )
                 {
@@ -761,7 +761,7 @@ class AfCloudStorage
 
     private function _SaveLog()
     {
-        DB::collection( AfCloudStorageConst::$m_str_LogTablesName.date('_Y-m-d-H', time()) )
+        DB::collection( AfCloudStorageConst::$m_str_LogTablesName.date('_Y-m-d', time()) )
             ->insert([
                         'ip'         => CLib::GetClientIP( false, false ),
                         'url'        => Request::getRequestUri(),

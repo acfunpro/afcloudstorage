@@ -1,13 +1,60 @@
 ####安装方法
-	composer require acfunpro/afcloudstorage 
 	
 	github 地址
 		https://github.com/acfunpro/afcloudstorage.git
 		
+	composer require acfunpro/afcloudstorage
+	
 	在/config/app.php文件中加入
 		'afcloudform' => 'default_admin'
-	afcloudform值用来与url中form参数对比，如果相等则为后台请求
-	若不设置默认为admin
+		afcloudform值用来与url中form参数对比，如果相等则为后台请求
+		若不设置默认为admin
+		在providers中加入
+			Jenssegers\Mongodb\MongodbServiceProvider::class,
+			Mews\Purifier\PurifierServiceProvider::class,
+		在aliases加入
+			'Mongo'     => Jenssegers\Mongodb\MongodbServiceProvider::class,
+			'Purifier' => Mews\Purifier\Facades\Purifier::class,
+		
+	在/app/Http/routes.php加入
+	Route::group( [ 'prefix' => 'api', 'middleware' => 'AfCloud' ] , function(){
+		Route::resource( "auto" , "AfCloudController" );
+	});
+	
+	执行 $ php artisan make:middleware AfCloudMiddleware
+	生成/app/Http/Middleware/目录下生成AfCloudMiddleware.php
+	修改handle方法为
+	public function handle($request, Closure $next)
+	{
+		$arrInputData = Input::all();
+		if( !empty( $arrInputData[ 'class' ] ) && ! preg_match( '/[^\w\-]/' , $arrInputData[ 'class' ] ) )
+		{
+			return $next($request);
+		}
+		else
+		{
+			return response('Unauthorized.', 401);
+		}
+	}
+	在加入/app/Http/Kernel.php加入
+		'AfCloud' => \App\Http\Middleware\AfCloudMiddleware::class,
+	
+	在/app/Http/Middleware/VerifyCsrfToken.php文件$except中加入
+		'/api*'
+	
+	在文件中使用
+		use acfunpro\afcloudstorage\AfCloudStorage;
+	
+	// 如果使用vdate
+		在App\Http\Controllers.php 文件中加入
+		use dekuan\vdata\CRemote;
+		function __construct()
+		{
+			$this->m_sAcceptedVersion = CRemote::GetAcceptedVersionEx();
+		}
+		
+	部署完毕后在根目录执行
+			php artisan optimize
 
 
 ####说明
@@ -19,7 +66,27 @@
 			
 ####请求方式
 	基于RESTful设计原则
+	获取全部对象
+		$AfCloud = AfCloudStorage::GetInstance();
+		$nCall  = $AfCloud->GetIndex( $arrOutPutData, $sErroeMsg );
 
+	获取一个对象
+		$AfCloud = AfCloudStorage::GetInstance();
+		$nCall  = $AfCloud->GetShow( $arrOutPutData, $sErroeMsg, $id );
+		
+	创建对象
+		$AfCloud = AfCloudStorage::GetInstance();
+		$nCall  = $AfCloud->PostStore( $arrOutPutData, $sErroeMsg );
+	
+	修改对象
+		$AfCloud = AfCloudStorage::GetInstance();
+		$nCall  = $AfCloud->PostStore( $arrOutPutData, $sErroeMsg, $id );
+	
+	删除对象
+		$AfCloud = AfCloudStorage::GetInstance();
+		$nCall  = $AfCloud->GetDestroy( $arrOutPutData, $sErroeMsg, $id );
+
+		
 ####请求URL
 	get     {url}/   获取全部对象
 			实现方法  GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' )
