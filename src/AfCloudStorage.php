@@ -67,11 +67,11 @@ class AfCloudStorage
             $this->_GetDBOtherData();
             $result = $this->_GetDBGetData();
 
-            $arrResultColumn = $this->_GetTablesColumn(1);
+            $arrResultColumn = $this->GetTablesColumn(1);
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
-                $arrDisplayColumn = array_merge( $arrResultColumn, ['id','createAt','updateAt'] );
+                $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
                 if( array_key_exists( 'item' , $arrGet ) )
                 {
@@ -116,13 +116,13 @@ class AfCloudStorage
 
             $this->_GetDBWhereData($id);
 
-            $arrResultColumn = $this->_GetTablesColumn(1);
+            $arrResultColumn = $this->GetTablesColumn(1);
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
                 $nRet = AfCloudStorageConst::ERROR_SUCCESS;
 
-                $arrDisplayColumn = array_merge( $arrResultColumn, ['id','createAt','updateAt'] );
+                $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
                 $arrOutputData    = $this->m_oDBLink->first( $arrDisplayColumn );
             }
         }
@@ -202,7 +202,7 @@ class AfCloudStorage
                 }
                 else
                 {
-                    $this->m_oDBLink->where( 'id' , $this->_GetVarType( $arrId[0] ) )
+                    $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) )
                         ->delete();
                 }
                 $nRet = AfCloudStorageConst::ERROR_SUCCESS;
@@ -225,7 +225,6 @@ class AfCloudStorage
     //
     private function _Init()
     {
-        date_default_timezone_set('PRC');
         // 数据过滤
         $this->m_arrInputData = clean( Input::all() , array('Attr.EnableID' => true) );
 
@@ -233,7 +232,7 @@ class AfCloudStorage
         $this->_IsArrKey($this->m_arrInputData);
 
         // 判断是或否为后台请求
-        $afCloudForm = !empty( Config::get('app.afcloudform') ) ? Config::get('app.afcloudform') : 'admin';
+        $afCloudForm = !empty( Config::get('app.afcloud.form') ) ? Config::get('app.afcloud.form') : 'admin';
         if( ! empty( $this->m_arrInputData['form'] ) && $this->m_arrInputData['form'] == $afCloudForm )
         {
             $this->m_sRequestForm = 'Admin';
@@ -262,7 +261,7 @@ class AfCloudStorage
      * @param string $sFlag
      * @return array
      */
-    private function _GetTablesColumn( $vFlag = '' )
+    public function GetTablesColumn( $vFlag = '' )
     {
         $arrTablesColumn = array();
 
@@ -341,14 +340,14 @@ class AfCloudStorage
                 }
                 else
                 {
-                    $this->m_oDBLink->where( 'id' , $this->_GetVarType( $arrId[0] ) )
+                    $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) )
                                     ->update( $arrTablesData );
                 }
             }
             else
             {
                 $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
-                $arrTablesData['id']       = substr(md5(microtime(true).rand(0,999).rand(0,999)),8,16);
+                $arrTablesData['_afid']       = substr(md5(microtime(true).rand(0,999).rand(0,999)),8,16);
                 $this->m_oDBLink->insert( $arrTablesData );
             }
             $nRet = true;
@@ -398,7 +397,7 @@ class AfCloudStorage
         }
         elseif( 'other' == $sFlag )
         {
-            $arrSetOtherData = $this->_GetTablesColumn();
+            $arrSetOtherData = $this->GetTablesColumn();
 
             foreach ( $arrSetOtherData as $sKey => $sVal)
             {
@@ -528,7 +527,7 @@ class AfCloudStorage
             }
             else
             {
-                $this->m_oDBLink->where( 'id' , $this->_GetVarType( $arrId[0] ) );
+                $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) );
             }
         }
 
@@ -558,6 +557,11 @@ class AfCloudStorage
                     $this->m_oDBLink->skip( intval( $arrOther['limit'][0] ) );
                     $this->m_oDBLink->take( intval( $arrOther['limit'][1] ) );
                 }
+            }
+            else
+            {
+                $take = !empty( Config::get('app.afcloud.take') ) ? Config::get('app.afcloud.take') : 20;
+                $this->m_oDBLink->take( intval( $take ) );
             }
             if( array_key_exists( 'order' , $arrOther ) )
             {
