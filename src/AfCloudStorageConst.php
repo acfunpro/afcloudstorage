@@ -30,14 +30,14 @@ class AfCloudStorageConst
         '_Display'    =>    'int',  // 客户端不可见
     );
     static public $m_arr_SetupTablesListRule = array(
-        '_Table'      =>    'required', // 表名
-        '_Column'     =>    'required', // 列名
-        '_Type'       =>    'required', // 类型
-        '_Default'    =>    '',         // 默认值
-        '_Describe'   =>    'required', // 描述
-        '_Verify'     =>    '',         // 验证规则
-        '_Sort'       =>    'number',   // 排序
-        '_Display'    =>    'number',   // 客户端不可见
+        '_Table'      =>    ['required'], // 表名
+        '_Column'     =>    ['required'], // 列名
+        '_Type'       =>    ['required'], // 类型
+        '_Default'    =>    [''],         // 默认值
+        '_Describe'   =>    ['required'], // 描述
+        '_Verify'     =>    [''],         // 验证规则
+        '_Sort'       =>    ['integer'],   // 排序
+        '_Display'    =>    ['integer'],   // 客户端不可见
     );
     static public $m_arr_SetupTablesListDesc = array(
         '_Table'      =>    '表名',        // 表名
@@ -49,10 +49,10 @@ class AfCloudStorageConst
         '_Sort'       =>    '排序',        // 排序
         '_Display'    =>    '客户端不可见',  // 客户端不可见
     );
-	//
-	//	common error codes
-	//
-	const ERROR_SUCCESS			            = 0;            //      successfully
+    //
+    //	common error codes
+    //
+    const ERROR_SUCCESS			            = 0;            //      successfully
     const ERROR_ACCESS_CLASS_NO_EXIST		= -100001;      //      access class no exist
     const ERROR_ACCESS_EXEC_ERROR		    = -100010;      //      access exec error
 

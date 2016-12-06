@@ -73,16 +73,13 @@ class AfCloudStorage
             {
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
-                if( array_key_exists( 'item' , $arrGet ) )
+                if( 'once' == @$arrGet['item'] )
                 {
-                    if( 'once' == @$arrGet['item'] )
-                    {
-                        $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
-                    }
-                    elseif( 'all' == @$arrGet['item'] )
-                    {
-                        $result['result'] = $this->m_oDBLink->get( $arrDisplayColumn );
-                    }
+                    $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
+                }
+                else
+                {
+                    $result['result'] = $this->m_oDBLink->get( $arrDisplayColumn );
                 }
             }
 
@@ -260,35 +257,32 @@ class AfCloudStorage
      * 获取对应表的设置数据
      * @param string $sFlag
      * @return array
+     * if   $sFlag为空返回所有数据
+     * else 只返回相关的字段
      */
     public function GetTablesColumn( $vFlag = '' )
     {
         $arrTablesColumn = array();
 
         $objTablesData = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName );
-
-        // 不是管理员查看
-        if( 'Admin' != $this->m_sRequestForm )
-        {
-            $objTablesData->where('_Table', $this->m_sDBTableName);
-            $objTablesData->where('_Display', 0);
-        }
-
         $objTablesData->orderBy('_Sort','desc');
 
-        // if   $sFlag为空返回所有数据
-        // else 只返回相关的字段
-        if( '' == $vFlag )
+        if( $this->m_sDBTableName == AfCloudStorageConst::$m_str_SetupTablesName )
         {
-            $arrTablesColumn = $objTablesData->get();
-        }
-        else
-        {
-            if( 'Admin' == $this->m_sRequestForm && $this->m_sDBTableName == AfCloudStorageConst::$m_str_SetupTablesName )
+            if( 'Admin' == $this->m_sRequestForm && '' != $vFlag )
             {
                 $arrTablesColumn = AfCloudStorageConst::$m_arr_SetupTablesList;
             }
-            else
+        }
+        else
+        {
+            $objTablesData->where('_Table', $this->m_sDBTableName);
+            if( 'Admin' != $this->m_sRequestForm )
+            {
+                $objTablesData->where('_Display', 0);
+            }
+
+            if( '' != $vFlag )
             {
                 $arrResult = $objTablesData->get( ['_Column'] );
                 foreach ($arrResult as $sVal)
@@ -296,6 +290,11 @@ class AfCloudStorage
                     $arrTablesColumn[] = $sVal['_Column'];
                 }
             }
+        }
+
+        if( '' == $vFlag )
+        {
+            $arrTablesColumn = $objTablesData->get();
         }
 
         return $arrTablesColumn;
@@ -315,13 +314,13 @@ class AfCloudStorage
 
         if( AfCloudStorageConst::$m_str_SetupTablesName == $this->m_sDBTableName )
         {
-            $arrTablesData = $this->_CheckTablesData( 'setup', $arrOutputData, $sErroeMsg );
+            $arrTablesData = $this->_CheckTablesData( 'setup', $arrOutputData, $sErroeMsg, $id );
         }
         else
         {
             if( $this->_CheckTableExist() )
             {
-                $arrTablesData = $this->_CheckTablesData( 'other', $arrOutputData, $sErroeMsg );
+                $arrTablesData = $this->_CheckTablesData( 'other', $arrOutputData, $sErroeMsg, $id );
             }
         }
 
@@ -336,18 +335,18 @@ class AfCloudStorage
                 if( ! empty( $arrId[1] ) )
                 {
                     $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[1] ) )
-                                    ->update( $arrTablesData );
+                        ->update( $arrTablesData );
                 }
                 else
                 {
                     $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) )
-                                    ->update( $arrTablesData );
+                        ->update( $arrTablesData );
                 }
             }
             else
             {
                 $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
-                $arrTablesData['_afid']       = substr(md5(microtime(true).rand(0,999).rand(0,999)),8,16);
+                $arrTablesData['_afid']       = substr(md5(microtime().rand(0,999).rand(0,999)),8,16);
                 $this->m_oDBLink->insert( $arrTablesData );
             }
             $nRet = true;
@@ -362,8 +361,8 @@ class AfCloudStorage
         $bRtn = false;
 
         $ExistTable = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName )
-                ->where('_Table', $this->m_sDBTableName)
-                ->first();
+            ->where('_Table', $this->m_sDBTableName)
+            ->first();
 
         if( isset($ExistTable) )
         {
@@ -377,19 +376,20 @@ class AfCloudStorage
      * 处理用户提交数据
      * @param $sFlag
      */
-    private function _CheckTablesData( $sFlag, &$arrOutputData, &$sErroeMsg  )
+    private function _CheckTablesData( $sFlag, &$arrOutputData, &$sErroeMsg, $id  )
     {
         $arrPostData = array();
         $arrDataRule = array();
+        $arrColumn   = array();
 
         if( 'setup' == $sFlag && 'Admin' == $this->m_sRequestForm )
         {
             // 获取数据
-            $postData    = app( 'request' )->only( AfCloudStorageConst::$m_arr_SetupTablesList );
+            $arrColumn   =  AfCloudStorageConst::$m_arr_SetupTablesList;
             // 验证规则
             $arrDataRule = AfCloudStorageConst::$m_arr_SetupTablesListRule;
             // 字段描述
-            $arrDataDesc = AfCloudStorageConst::$m_arr_SetupTablesListDesc;
+            // $arrDataDesc = AfCloudStorageConst::$m_arr_SetupTablesListDesc;
             // 字段类型
             $arrDataType = AfCloudStorageConst::$m_arr_SetupTablesListType;
             // 默认值
@@ -404,12 +404,8 @@ class AfCloudStorage
                 $arrColumn[]                          = $sVal[ '_Column' ];
                 $arrDataDefault[ $sVal[ '_Column' ] ] = $sVal[ '_Default' ];
                 $arrDataRule   [ $sVal[ '_Column' ] ] = $sVal[ '_Verify' ];
-                $arrDataDesc   [ $sVal[ '_Column' ] ] = $sVal[ '_Describe' ];
+                //  $arrDataDesc   [ $sVal[ '_Column' ] ] = $sVal[ '_Describe' ];
                 $arrDataType   [ $sVal[ '_Column' ] ] = $sVal[ '_Type' ];
-            }
-            if( CLib::IsArrayWithKeys( @$arrColumn ) )
-            {
-                $postData = app( 'request' )->only( $arrColumn );
             }
         }
         else
@@ -417,57 +413,112 @@ class AfCloudStorage
             $sErroeMsg   = '错误请求';
         }
 
-        foreach ( $arrDataRule as $sKey => $sVal)
+        if( CLib::IsArrayWithKeys( $arrColumn ) )
         {
-            foreach (explode('|', $sVal) as $sSVal)
+            $arrPostData = clean( app( 'request' )->only( $arrColumn ), array('Attr.EnableID' => true) );
+
+            // 转换字段类型
+            foreach ($arrPostData as $sKey => $vVal)
             {
-                if( '' === @$postData[ $sKey ] && '' !== @$arrDataDefault[ $sKey ] )
+                if( '' != @$arrDataDefault[$sKey] && '' == $vVal )
                 {
-                    $postData[ $sKey ] = @$arrDataDefault[ $sKey ];
+                    $arrPostData[$sKey] = $arrDataDefault[$sKey];
                 }
-                elseif( 'required' == $sSVal && '' == @$postData[ $sKey ] )
+                // 类型验证
+                if( in_array( $arrDataType[ $sKey ] ,['str','text'] ) )
                 {
-                    $sErroeMsg = $arrDataDesc[ $sKey ].'不能为空';
-                    break 2;
+                    $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
                 }
-                elseif( 'number' == $sSVal && ! is_numeric( @$postData[$sKey] ) )
+                elseif( in_array( $arrDataType[ $sKey ] ,['int'] ) )
                 {
-                    $sErroeMsg = $arrDataDesc[ $sKey ].'不是数字';
-                    break 2;
+                    $arrPostData[ $sKey ] = intval( $arrPostData[ $sKey ] );
                 }
-                elseif( 'phone' == $sSVal && ! preg_match('/^1[34578][0-9]{9}$/', @$postData[$sKey]) )
+                elseif( in_array( $arrDataType[ $sKey ] ,['file'] ) )
                 {
-                    $sErroeMsg = $arrDataDesc[ $sKey ].'不匹配';
-                    break 2;
-                }
-            }
-            if( in_array( $arrDataType[ $sKey ] ,['str','text'] ) )
-            {
-                $arrPostData[ $sKey ] = strval( $postData[ $sKey ] );
-            }
-            elseif( in_array( $arrDataType[ $sKey ] ,['int'] ) )
-            {
-                $arrPostData[ $sKey ] = intval( $postData[ $sKey ] );
-            }
-            elseif( in_array( $arrDataType[ $sKey ] ,['file'] ) )
-            {
-                if( ! is_array($postData[ $sKey ]) )
-                {
-                    $arrPostData[ $sKey ] = [ $postData[ $sKey ] ];
+                    if( ! is_array($arrPostData[ $sKey ]) )
+                    {
+                        $arrPostData[ $sKey ] = [ $arrPostData[ $sKey ] ];
+                    }
+                    else
+                    {
+                        $arrPostData[ $sKey ] = $arrPostData[ $sKey ];
+                    }
                 }
                 else
                 {
-                    $arrPostData[ $sKey ] = $postData[ $sKey ];
+                    $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
                 }
             }
-            else{
-                $sErroeMsg = $arrDataDesc[ $sKey ].'类型不正确';
+        }
+
+        // 校验字段验证信息
+        foreach ($arrDataRule as $sSKey => $arrVal)
+        {
+            foreach ($arrVal as $sKey => $sVal)
+            {
+                // 唯一验证
+                if( 'unique' == $sVal )
+                {
+                    if( AfCloudStorageConst::$m_str_SetupTablesName != $this->m_sDBTableName )
+                    {
+                        $arrDataRule[$sSKey][$sKey] = "unique:$this->m_sDBTableName,$sSKey";
+
+                        if( '' != $id )
+                        {
+                            $arrId = explode('.', $id);
+
+                            if( ! empty( $arrId[1] ) )
+                            {
+                                $arrDataRule[$sSKey][$sKey] .= ",$arrId[1],$arrId[0]";
+                            }
+                            else
+                            {
+                                $arrDataRule[$sSKey][$sKey] .= ",$arrId[0],_afid";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        $objQuery = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName)
+                            ->where('_Table',  $arrPostData['_Table'])
+                            ->where('_Column', $arrPostData['_Column']);
+
+                        if( '' != $id )
+                        {
+                            $arrId = explode('.', $id);
+
+                            if( ! empty( $arrId[1] ) )
+                            {
+                                $objQuery->where($arrId[0], '!=', $arrId[1]);
+                            }
+                            else
+                            {
+                                $objQuery->where('_afid', '!=', $arrId[0]);
+                            }
+                        }
+
+                        if($objQuery->count() > 0)
+                        {
+                            $sErroeMsg = "The _Column has already been taken.";
+                            break 2;
+                        }
+                        unset($arrDataRule[$sSKey]);
+                    }
+                }
             }
         }
-        if( '' != $sErroeMsg )
+
+        if( '' == $sErroeMsg)
+        {
+            $validator   = app( 'validator' )->make( $arrPostData, $arrDataRule );
+            $sErroeMsg = $validator->messages()->first();
+        }
+
+        if( '' != $sErroeMsg)
         {
             $arrPostData = array();
         }
+
         return $arrPostData;
     }
 
@@ -482,14 +533,14 @@ class AfCloudStorage
         $arrWhere = $this->_GetArrDataTosKey('where');
 
         $conform  = [
-                        'gt' => '>' ,
-                        'ge' => '>=',
-                        'lt' => '<' ,
-                        'le' => '<=',
-                        'et' => '=' ,
-                        'nt' => '!=',
-                        'lk' => 'like'
-                    ];
+            'gt' => '>' ,
+            'ge' => '>=',
+            'lt' => '<' ,
+            'le' => '<=',
+            'eq' => '=' ,
+            'ne' => '!=',
+            'lk' => 'like'
+        ];
 
         if( CLib::IsArrayWithKeys( $arrWhere ) )
         {
@@ -767,15 +818,15 @@ class AfCloudStorage
     {
         DB::collection( AfCloudStorageConst::$m_str_LogTablesName.date('_Y-m-d', time()) )
             ->insert([
-                        'ip'         => CLib::GetClientIP( false, false ),
-                        'url'        => Request::getRequestUri(),
-                        'waiting'    => intval((microtime(true)-LARAVEL_START)*1000),
-                        'class'      => $this->m_sDBTableName,
-                        'type'       => $this->m_sRequestType,
-                        'form'       => $this->m_sRequestForm,
-                        'inputData'  => $this->m_arrInputData,
-                        'outputData' => $this->m_arrOutputData,
-                        'time'       => date('Y-m-d H:i:s', time())
+                'ip'         => CLib::GetClientIP( false, false ),
+                'url'        => Request::getRequestUri(),
+                'waiting'    => intval((microtime(true)-LARAVEL_START)*1000),
+                'class'      => $this->m_sDBTableName,
+                'type'       => $this->m_sRequestType,
+                'form'       => $this->m_sRequestForm,
+                'inputData'  => $this->m_arrInputData,
+                'outputData' => $this->m_arrOutputData,
+                'time'       => date('Y-m-d H:i:s', time())
             ]);
     }
 

@@ -6,9 +6,12 @@
 	composer require acfunpro/afcloudstorage
 	
 	在/config/app.php文件中加入
-		'afcloudform' => 'default_admin'
-		afcloudform值用来与url中form参数对比，如果相等则为后台请求
-		若不设置默认为admin
+		'afcloud' => array(
+			'form'=>'admin',
+			'take' => 10
+		),
+		form值用来与url中form参数对比，如果相等则为后台请求,若不设置默认为admin
+		take值为限制返回条数，默认为20条
 		在providers中加入
 			Jenssegers\Mongodb\MongodbServiceProvider::class,
 			Mews\Purifier\PurifierServiceProvider::class,
@@ -62,7 +65,7 @@
 	保留表名：_SetupTables (对所有表的列设置信息)
 			_LogTables   (接口请求日志)
 	请求示例：
-		{url}?class=test&where={"name":["lk","test%"],"id":["gt":"3"]}&other={"order":["sort","asc"]}&get={"item":"all"}
+		{url}?class=test&where={"name":["lk","test%"],"id":["gt":"3"]}&other={"order":["sort","asc"]}
 			
 ####请求方式
 	基于RESTful设计原则
@@ -122,8 +125,8 @@
 				'ge' => '>=',
 				'lt' => '<' ,
 				'le' => '<=',
-				'et' => '=' ,
-				'nt' => '!=',
+				'eq' => '=' ,
+				'ne' => '!=',
 				'lk' => 'like'     // {"name",["lk","%name%"]}
 			];
 		where = {"id":["in",["1","2"]]}      // 返回id in(1,2)
@@ -131,13 +134,13 @@
 		
 		
 		   // 返回0到10条数据
-		other = {"limit":"10"}&get={"get":"all"}
-				{"limit":["0","10"]}&get={"get":"all"}
+		other = {"limit":"10"}
+				{"limit":["0","10"]}
 		   // 按照sort排序
-		other = {"order",["sort"]}&get={"get":"all"}      // 倒序
-				{"order",["sort","asc"]}&get={"get":"all"}   // 正序
+		other = {"order",["sort"]}       // 倒序
+				{"order",["sort","asc"]}   // 正序
 		   // groupby sid
-		other = {"group":"sid"}&get={"get":"all"}
+		other = {"group":"sid"}
 			// id为2的数据total字段递增
 		where={"id":"2"}&other={"inc",["total"]}        // 递增 1
 		where={"id":"2"}&other={"inc",["total","5"]}    // 递增 5
@@ -146,8 +149,8 @@
 		where={"id":"2"}&other={"dec",["total","5"]}    // 递减 5
 		
 		
-		get   = {"item":"once"}  
-		// item = once 返回单条; item = all 返回所有; 不设置则不返回数据(num, max, min, avg, sum 参数除外)
+		
+		// item = once 返回单条; 默认返回所有; (num, max, min, avg, sum 参数除外)
 		get   = {"num":"1"}	// 返回符合条件的总数据量
 		get   = {"max":"id"} // 返回最大id  可选参数有( max, min, avg, sum ）
 
@@ -177,17 +180,16 @@
         _Display    =>    int  // 客户端不可见
     
    	// 配置表字段验证规则
-   		// 目前仅支持 非空验证  (required)
-   						数字验证   (number)
-   						手机号验证 (phone)
-        _Table      =>    required // 表名
-        _Column     =>    required // 列名
-        _Type       =>    required // 类型
-        _Default    =>    ''       // 默认值
-        _Describe   =>    required // 描述
-        _Verify     =>    ''       // 验证规则
-        _Sort       =>    number   // 排序
-        _Display    =>    number   // 客户端不可见
+			使用validator（laravel框架内自带验证）
+		
+        _Table      =>    ['required'] // 表名
+        _Column     =>    ['required'] // 列名
+        _Type       =>    ['required'] // 类型
+        _Default    =>    ['']         // 默认值
+        _Describe   =>    ['required'] // 描述
+        _Verify     =>    ['']         // 验证规则
+        _Sort       =>    ['number']   // 排序
+        _Display    =>    ['number']   // 客户端不可见
     
    	// 配置表字段描述
         _Table      =>    表名        // 表名
@@ -199,7 +201,14 @@
         _Sort       =>    排序        // 排序
         _Display    =>    客户端不可见 // 客户端不可见
     
-
- 
+####注：
+    
+			'unique'修改时默认强制忽略当前id
+			{{url}}/api/auto/ba786617bcebb3d5
+			如果使用自定义字段可写为
+			{{url}}/api/auto/id.123 将强制忽略id为123的数据
+			
+			
+			默认不能访问_SetupTables表中内容，需要在url中添加&form={默认为admin}，确认是后台请求
 
 
