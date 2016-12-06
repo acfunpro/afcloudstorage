@@ -91,23 +91,23 @@
 
 		
 ####请求URL
-	get     {url}/   获取全部对象
+	get     {url}?class=test   获取全部对象
 			实现方法  GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' )
 			
-	get     {url}//1  获取一个对象 默认字段为id
+	get     {url}/1?class=test  获取一个对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法  GetShow( array & $arrOutputData = [], & $sErroeMsg = '', $id )
 			
-	post    {url}/   创建对象
+	post    {url}?class=test   创建对象
 			实现方法  PostStore( array & $arrOutputData = [], & $sErroeMsg = '')
 
-	put     {url}/1  修改一个对象 默认字段为id
+	put     {url}/1?class=test  修改一个对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法	PostStore( array & $arrOutputData = [], & $sErroeMsg = '', $id = '' )
 
-	delete  {url}/1  删除对象 默认字段为id
+	delete  {url}/1?class=test  删除对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法	GetDestroy( &$arrOutputData, &$sErroeMsg, $id = '' )
