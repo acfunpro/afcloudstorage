@@ -67,7 +67,7 @@
 	请求示例：
 		{url}?class=test&where={"name":["lk","test%"],"id":["gt":"3"]}&other={"order":["sort","asc"]}
 			
-####请求方式
+####前台请求方式
 	基于RESTful设计原则
 	获取全部对象
 		$AfCloud = AfCloudStorage::GetInstance();
@@ -90,7 +90,7 @@
 		$nCall  = $AfCloud->GetDestroy( $arrOutPutData, $sErroeMsg, $id );
 
 		
-####请求URL
+####前台请求URL
 	get     {url}?class=test   获取全部对象
 			实现方法  GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' )
 			
@@ -112,7 +112,7 @@
 				{url}/mid.1
 			实现方法	GetDestroy( &$arrOutputData, &$sErroeMsg, $id = '' )
 
-####参数
+####前台参数
 	带*为必填
 		*class = test       // 表名
 		 form  = admin      // 标明来源
@@ -154,6 +154,33 @@
 		get   = {"num":"1"}	// 返回符合条件的总数据量
 		get   = {"max":"id"} // 返回最大id  可选参数有( max, min, avg, sum ）
 
+
+
+####控制器中调用
+        
+        // 实例化
+        $AfCloud = AfCloudStorage::GetInstance();
+        
+        // 调用SetVar方法设置操作的表,
+        $AfCloud -> SetVar(
+            [
+                'sDBTableName'=>'_SetupTables',
+                '_afArrInputData'=>[
+                                    '_afform' => 'admin',
+                                    _afWhere'{"_Table":"ouqi"}'
+                                ]
+            ]
+        );
+                $AfCloud->setVar($sArrMData);
+        例：
+        
+            $AfCloud = AfCloudStorage::GetInstance();
+            查询配置表中所有对象
+              (_SetupTables 表所有操作一定要加form={default_admin})
+            $AfCloud -> SetVar(['sDBTableName'=>'_SetupTables','arrInputData'=>['form'=>'admin']]);
+            
+            
+            print_r($AfCloud->GetAfid());die;
 
 ####配置表信息设置
     _LogTables        // 日志表

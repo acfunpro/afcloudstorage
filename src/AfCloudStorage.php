@@ -21,13 +21,15 @@ class AfCloudStorage
 
     protected $m_arrOutputData;
 
-    public $m_sDBDriver;
+    protected $m_sAfCloudForm;
 
-    public $m_sDBTableName;
+    protected $m_sDBDriver;
 
-    public $m_arrInputData;
+    protected $m_sDBTableName;
 
-    public $m_sRequestForm;
+    protected $m_arrInputData;
+
+    protected $m_sRequestForm;
 
     public function __construct()
     {
@@ -46,6 +48,55 @@ class AfCloudStorage
 
 
     /**
+     * 设置参数
+     * @param array $arrMData
+     * @param bool $bFlag
+     */
+    public function setVar( $arrMData = [], $bFlag = false )
+    {
+        $this->m_sRequestForm = 'Index';
+
+        if( array_key_exists( 'sAfCloudForm', $arrMData ) )
+        {
+            if( $arrMData['sAfCloudForm'] == $this->m_sAfCloudForm )
+            {
+                $this->m_sRequestForm = 'Admin';
+            }
+        }
+
+        if( array_key_exists( 'sDBTableName', $arrMData ) )
+        {
+            $this->m_sDBTableName = $arrMData['sDBTableName'];
+        }
+
+        if( array_key_exists( 'arrInputData', $arrMData ) )
+        {
+            if( true == $bFlag )
+            {
+                $this->m_arrInputData = $arrMData['arrInputData'];
+            }
+            else
+            {
+                $this->m_arrInputData = array_merge( $this->m_arrInputData, $arrMData['arrInputData'] );
+            }
+        }
+    }
+
+    /**
+     * 获取参数
+     * @return array
+     */
+    public function getVar()
+    {
+        $arrRtnData = array();
+        $arrRtnData['sRequestForm']   = $this->m_sRequestForm;
+        $arrRtnData['sDBTableName']   = $this->m_sDBTableName;
+        $arrRtnData['arrInputData']   = $this->m_arrInputData;
+
+        return $arrRtnData;
+    }
+
+    /**
      *  GetIndex
      *  查询所有对象
      *
@@ -61,16 +112,20 @@ class AfCloudStorage
         {
             $result = array();
             $nRet = AfCloudStorageConst::ERROR_SUCCESS;
-            $arrGet   = $this->_GetArrDataTosKey('get');
-
-            $this->_GetDBWhereData();
-            $this->_GetDBOtherData();
-            $result = $this->_GetDBGetData();
 
             $arrResultColumn = $this->GetTablesColumn(1);
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
+                $arrGet   = $this->_GetArrDataTosKey('get');
+
+                // 拼接查询条件
+                $this->_GetDBWhereData();
+                $this->_GetDBOtherData();
+
+                // 获取sum num max min avg值
+                $result = $this->_GetDBGetData();
+
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
                 if( 'once' == @$arrGet['item'] )
@@ -82,7 +137,6 @@ class AfCloudStorage
                     $result['result'] = $this->m_oDBLink->get( $arrDisplayColumn );
                 }
             }
-
             $arrOutputData = $result;
         }
 
@@ -110,7 +164,6 @@ class AfCloudStorage
 
         if( $this->_CheckStrClass() )
         {
-
             $this->_GetDBWhereData($id);
 
             $arrResultColumn = $this->GetTablesColumn(1);
@@ -166,6 +219,7 @@ class AfCloudStorage
         {
             $this->m_sRequestType = 'Post';
         }
+
         $this->m_arrOutputData['data']   = $arrOutputData;
         $this->m_arrOutputData['msg']    = $sErroeMsg;
         $this->m_arrOutputData['error']  = $nRet;
@@ -217,42 +271,6 @@ class AfCloudStorage
 
 
 
-    ////////////////////////////////////////////////////////////////////////////////
-    //  Private
-    //
-    private function _Init()
-    {
-        // 数据过滤
-        $this->m_arrInputData = clean( Input::all() , array('Attr.EnableID' => true) );
-
-        // 验证有效的Key(下标)
-        $this->_IsArrKey($this->m_arrInputData);
-
-        // 判断是或否为后台请求
-        $afCloudForm = !empty( Config::get('app.afcloud.form') ) ? Config::get('app.afcloud.form') : 'admin';
-        if( ! empty( $this->m_arrInputData['form'] ) && $this->m_arrInputData['form'] == $afCloudForm )
-        {
-            $this->m_sRequestForm = 'Admin';
-        }
-        else
-        {
-            $this->m_sRequestForm = 'Index';
-        }
-
-        // 获取操作表名
-        $this->m_sDBTableName = isset( $this->m_arrInputData['class'] )?$this->m_arrInputData['class']:'';
-
-        // 判断连接数据库(目前未做mysql数据库支持)
-        if( 'mysql' == $this->m_sDBDriver )
-        {
-            $this->m_oDBLink = DB::table( $this->m_sDBTableName );
-        }
-        else
-        {
-            $this->m_oDBLink = DB::collection( $this->m_sDBTableName );
-        }
-    }
-
     /**
      * 获取对应表的设置数据
      * @param string $sFlag
@@ -277,6 +295,7 @@ class AfCloudStorage
         else
         {
             $objTablesData->where('_Table', $this->m_sDBTableName);
+
             if( 'Admin' != $this->m_sRequestForm )
             {
                 $objTablesData->where('_Display', 0);
@@ -285,6 +304,7 @@ class AfCloudStorage
             if( '' != $vFlag )
             {
                 $arrResult = $objTablesData->get( ['_Column'] );
+
                 foreach ($arrResult as $sVal)
                 {
                     $arrTablesColumn[] = $sVal['_Column'];
@@ -298,6 +318,42 @@ class AfCloudStorage
         }
 
         return $arrTablesColumn;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////
+    //  Private
+    //
+    private function _Init()
+    {
+        // 数据过滤
+        $this->m_arrInputData = clean( Input::all() , array('Attr.EnableID' => true) );
+
+        // 验证有效的Key(下标)
+        $this->_IsArrKey($this->m_arrInputData);
+
+        // 判断是或否为后台请求
+        $this->m_sAfCloudForm = !empty( Config::get('app.afcloud.form') ) ? Config::get('app.afcloud.form') : 'admin';
+        if( ! empty( $this->m_arrInputData['form'] ) && $this->m_arrInputData['form'] == $this->m_sAfCloudForm )
+        {
+            $this->m_sRequestForm = 'Admin';
+        }
+        else
+        {
+            $this->m_sRequestForm = 'Index';
+        }
+
+        // 获取操作表名
+        $this->m_sDBTableName = isset( $this->m_arrInputData['class'] )?$this->m_arrInputData['class']:'';
+
+        // 判断连接数据库(目前未做mysql数据库支持)
+        if( 'mysql' == $this->m_sDBDriver )
+        {
+            $this->m_oDBLink = DB::table( $this->m_sDBTableName );
+        }
+        else
+        {
+            $this->m_oDBLink = DB::collection( $this->m_sDBTableName );
+        }
     }
 
 
@@ -404,7 +460,7 @@ class AfCloudStorage
                 $arrColumn[]                          = $sVal[ '_Column' ];
                 $arrDataDefault[ $sVal[ '_Column' ] ] = $sVal[ '_Default' ];
                 $arrDataRule   [ $sVal[ '_Column' ] ] = $sVal[ '_Verify' ];
-                //  $arrDataDesc   [ $sVal[ '_Column' ] ] = $sVal[ '_Describe' ];
+            //  $arrDataDesc   [ $sVal[ '_Column' ] ] = $sVal[ '_Describe' ];
                 $arrDataType   [ $sVal[ '_Column' ] ] = $sVal[ '_Type' ];
             }
         }
@@ -415,108 +471,119 @@ class AfCloudStorage
 
         if( CLib::IsArrayWithKeys( $arrColumn ) )
         {
-            $arrPostData = clean( app( 'request' )->only( $arrColumn ), array('Attr.EnableID' => true) );
-
-            // 转换字段类型
-            foreach ($arrPostData as $sKey => $vVal)
+            foreach( $arrColumn as $sCv )
             {
-                if( '' != @$arrDataDefault[$sKey] && '' == $vVal )
+                $arrPostData[$sCv] = @$this->m_arrInputData[$sCv];
+            }
+
+            // 校验字段验证信息
+            foreach ($arrDataRule as $sSKey => $arrVal)
+            {
+                foreach ($arrVal as $sKey => $sVal)
                 {
-                    $arrPostData[$sKey] = $arrDataDefault[$sKey];
-                }
-                // 类型验证
-                if( in_array( $arrDataType[ $sKey ] ,['str','text'] ) )
-                {
-                    $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
-                }
-                elseif( in_array( $arrDataType[ $sKey ] ,['int'] ) )
-                {
-                    $arrPostData[ $sKey ] = intval( $arrPostData[ $sKey ] );
-                }
-                elseif( in_array( $arrDataType[ $sKey ] ,['file'] ) )
-                {
-                    if( ! is_array($arrPostData[ $sKey ]) )
+                    // 唯一验证
+                    if( 'unique' == $sVal )
                     {
-                        $arrPostData[ $sKey ] = [ $arrPostData[ $sKey ] ];
+                        if( AfCloudStorageConst::$m_str_SetupTablesName != $this->m_sDBTableName )
+                        {
+                            $arrDataRule[$sSKey][$sKey] = "unique:$this->m_sDBTableName,$sSKey";
+
+                            if( '' != $id )
+                            {
+                                $arrId = explode('.', $id);
+
+                                if( ! empty( $arrId[1] ) )
+                                {
+                                    $arrDataRule[$sSKey][$sKey] .= ",$arrId[1],$arrId[0]";
+                                }
+                                else
+                                {
+                                    $arrDataRule[$sSKey][$sKey] .= ",$arrId[0],_afid";
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $objQuery = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName)
+                                            ->where('_Table',  $arrPostData['_Table'])
+                                            ->where('_Column', $arrPostData['_Column']);
+
+                            if( '' != $id )
+                            {
+                                $arrId = explode('.', $id);
+
+                                if( ! empty( $arrId[1] ) )
+                                {
+                                    $objQuery->where($arrId[0], '!=', $arrId[1]);
+                                }
+                                else
+                                {
+                                    $objQuery->where('_afid', '!=', $arrId[0]);
+                                }
+                            }
+
+                            if($objQuery->count() > 0)
+                            {
+                                $sErroeMsg = "The _Column has already been taken.";
+                                break 2;
+                            }
+                            unset($arrDataRule[$sSKey]);
+                        }
                     }
-                    else
+                }
+            }
+
+
+            if( '' == $sErroeMsg)
+            {
+                $validator   = app( 'validator' )->make( $arrPostData, $arrDataRule );
+
+
+                if( $validator->passes() )
+                {
+                    // 转换字段类型
+                    foreach ($arrPostData as $sKey => $vVal)
                     {
-                        $arrPostData[ $sKey ] = $arrPostData[ $sKey ];
+                        if( '' != @$arrDataDefault[$sKey] && '' == $vVal )
+                        {
+                            $arrPostData[$sKey] = $arrDataDefault[$sKey];
+                        }
+                        // 类型验证
+                        if( in_array( $arrDataType[ $sKey ] ,['str','text'] ) )
+                        {
+                            $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
+                        }
+                        elseif( in_array( $arrDataType[ $sKey ] ,['int'] ) )
+                        {
+                            $arrPostData[ $sKey ] = intval( $arrPostData[ $sKey ] );
+                        }
+                        elseif( in_array( $arrDataType[ $sKey ] ,['array','file'] ) )
+                        {
+                            if( ! is_array($arrPostData[ $sKey ]) )
+                            {
+                                $arrPostData[ $sKey ] = [ $arrPostData[ $sKey ] ];
+                            }
+                            else
+                            {
+                                $arrPostData[ $sKey ] = $arrPostData[ $sKey ];
+                            }
+                        }
+                        else
+                        {
+                            $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
+                        }
                     }
                 }
                 else
                 {
-                    $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
+                    $sErroeMsg = $validator->messages()->first();
                 }
             }
-        }
 
-        // 校验字段验证信息
-        foreach ($arrDataRule as $sSKey => $arrVal)
-        {
-            foreach ($arrVal as $sKey => $sVal)
+            if( '' != $sErroeMsg)
             {
-                // 唯一验证
-                if( 'unique' == $sVal )
-                {
-                    if( AfCloudStorageConst::$m_str_SetupTablesName != $this->m_sDBTableName )
-                    {
-                        $arrDataRule[$sSKey][$sKey] = "unique:$this->m_sDBTableName,$sSKey";
-
-                        if( '' != $id )
-                        {
-                            $arrId = explode('.', $id);
-
-                            if( ! empty( $arrId[1] ) )
-                            {
-                                $arrDataRule[$sSKey][$sKey] .= ",$arrId[1],$arrId[0]";
-                            }
-                            else
-                            {
-                                $arrDataRule[$sSKey][$sKey] .= ",$arrId[0],_afid";
-                            }
-                        }
-                    }
-                    else
-                    {
-                        $objQuery = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName)
-                            ->where('_Table',  $arrPostData['_Table'])
-                            ->where('_Column', $arrPostData['_Column']);
-
-                        if( '' != $id )
-                        {
-                            $arrId = explode('.', $id);
-
-                            if( ! empty( $arrId[1] ) )
-                            {
-                                $objQuery->where($arrId[0], '!=', $arrId[1]);
-                            }
-                            else
-                            {
-                                $objQuery->where('_afid', '!=', $arrId[0]);
-                            }
-                        }
-
-                        if($objQuery->count() > 0)
-                        {
-                            $sErroeMsg = "The _Column has already been taken.";
-                            break 2;
-                        }
-                        unset($arrDataRule[$sSKey]);
-                    }
-                }
+                $arrPostData = array();
             }
-        }
-
-        if( '' == $sErroeMsg)
-        {
-            $validator   = app( 'validator' )->make( $arrPostData, $arrDataRule );
-            $sErroeMsg = $validator->messages()->first();
-        }
-
-        if( '' != $sErroeMsg)
-        {
-            $arrPostData = array();
         }
 
         return $arrPostData;
@@ -595,6 +662,12 @@ class AfCloudStorage
     {
         $arrOther = $this->_GetArrDataTosKey('other');
 
+        if( ! array_key_exists( 'limit' , $arrOther ) )
+        {
+            $take = !empty( Config::get('app.afcloud.take') ) ? Config::get('app.afcloud.take') : 20;
+            $this->m_oDBLink->take( intval( $take ) );
+        }
+
         if( CLib::IsArrayWithKeys( $arrOther ) )
         {
             if( array_key_exists( 'limit' , $arrOther ) )
@@ -609,11 +682,7 @@ class AfCloudStorage
                     $this->m_oDBLink->take( intval( $arrOther['limit'][1] ) );
                 }
             }
-            else
-            {
-                $take = !empty( Config::get('app.afcloud.take') ) ? Config::get('app.afcloud.take') : 20;
-                $this->m_oDBLink->take( intval( $take ) );
-            }
+
             if( array_key_exists( 'order' , $arrOther ) )
             {
                 if( CLib::IsExistingString( @$arrOther['order'][1] ) == 'asc' )
@@ -625,6 +694,7 @@ class AfCloudStorage
                     $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'desc' );
                 }
             }
+
             if( array_key_exists( 'group' , $arrOther ) )
             {
                 if( CLib::IsExistingString( @$arrOther['group'][0] ) )
@@ -632,6 +702,7 @@ class AfCloudStorage
                     $this->m_oDBLink->groupBy( $arrOther['group'][0] );
                 }
             }
+
             if( array_key_exists( 'inc' , $arrOther ) )
             {
                 if( CLib::SafeIntVal( @$arrOther['inc'][1] ) != 0 )
@@ -644,6 +715,7 @@ class AfCloudStorage
                 }
 
             }
+
             if( array_key_exists( 'dec' , $arrOther ) )
             {
                 if( CLib::SafeIntVal( @$arrOther['dec'][1] ) != 0 )
@@ -682,6 +754,7 @@ class AfCloudStorage
                     $result['num'] = $this->m_oDBLink->count();
                 }
             }
+
             if( array_key_exists( 'max' , $arrGet ) )
             {
                 if( CLib::IsExistingString( @$arrGet['max'] ) )
@@ -689,6 +762,7 @@ class AfCloudStorage
                     $result['max'] = $this->m_oDBLink->max( $arrGet['max'] );
                 }
             }
+
             if( array_key_exists( 'min' , $arrGet ) )
             {
                 if( CLib::IsExistingString( @$arrGet['min'] ) )
@@ -696,6 +770,7 @@ class AfCloudStorage
                     $result['min'] = $this->m_oDBLink->min( $arrGet['min'] );
                 }
             }
+
             if( array_key_exists( 'avg' , $arrGet ) )
             {
                 if( CLib::IsExistingString( @$arrGet['avg'] ) )
@@ -703,6 +778,7 @@ class AfCloudStorage
                     $result['avg'] = $this->m_oDBLink->avg( $arrGet['avg'] );
                 }
             }
+
             if( array_key_exists( 'sum' , $arrGet ) )
             {
                 if( CLib::IsExistingString( @$arrGet['sum'] ) )
@@ -748,6 +824,7 @@ class AfCloudStorage
         {
             $Retn = strval( $var );
         }
+
         return $Retn;
     }
 
@@ -784,6 +861,8 @@ class AfCloudStorage
      */
     private function _IsArrKey( &$dataArrOrStr )
     {
+        $bRtn = false;
+
         if(CLib::IsArrayWithKeys( $dataArrOrStr ))
         {
             foreach ($dataArrOrStr as $sKey => $vVal)
@@ -804,13 +883,10 @@ class AfCloudStorage
 
         if( CLib::IsArrayWithKeys($dataArrOrStr) )
         {
-            return true;
-        }
-        else
-        {
-            return false;
+            $bRtn = true;
         }
 
+        return $bRtn;
     }
 
 
