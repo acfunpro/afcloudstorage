@@ -48,55 +48,6 @@ class AfCloudStorage
 
 
     /**
-     * 设置参数
-     * @param array $arrMData
-     * @param bool $bFlag
-     */
-    public function setVar( $arrMData = [], $bFlag = false )
-    {
-        $this->m_sRequestForm = 'Index';
-
-        if( array_key_exists( 'sAfCloudForm', $arrMData ) )
-        {
-            if( $arrMData['sAfCloudForm'] == $this->m_sAfCloudForm )
-            {
-                $this->m_sRequestForm = 'Admin';
-            }
-        }
-
-        if( array_key_exists( 'sDBTableName', $arrMData ) )
-        {
-            $this->m_sDBTableName = $arrMData['sDBTableName'];
-        }
-
-        if( array_key_exists( 'arrInputData', $arrMData ) )
-        {
-            if( true == $bFlag )
-            {
-                $this->m_arrInputData = $arrMData['arrInputData'];
-            }
-            else
-            {
-                $this->m_arrInputData = array_merge( $this->m_arrInputData, $arrMData['arrInputData'] );
-            }
-        }
-    }
-
-    /**
-     * 获取参数
-     * @return array
-     */
-    public function getVar()
-    {
-        $arrRtnData = array();
-        $arrRtnData['sRequestForm']   = $this->m_sRequestForm;
-        $arrRtnData['sDBTableName']   = $this->m_sDBTableName;
-        $arrRtnData['arrInputData']   = $this->m_arrInputData;
-
-        return $arrRtnData;
-    }
-
-    /**
      *  GetIndex
      *  查询所有对象
      *
@@ -113,11 +64,11 @@ class AfCloudStorage
             $result = array();
             $nRet = AfCloudStorageConst::ERROR_SUCCESS;
 
-            $arrResultColumn = $this->GetTablesColumn(1);
+            $arrResultColumn = $this->GetTablesColumn(true);
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
-                $arrGet   = $this->_GetArrDataTosKey('get');
+                $arrGet   = $this->_GetArrDataTosKey('_afGet');
 
                 // 拼接查询条件
                 $this->_GetDBWhereData();
@@ -128,7 +79,7 @@ class AfCloudStorage
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
-                if( 'once' == @$arrGet['item'] )
+                if ( CLib::IsArrayWithKeys( $arrGet, '_afItem' ) )
                 {
                     $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
                 }
@@ -137,6 +88,7 @@ class AfCloudStorage
                     $result['result'] = $this->m_oDBLink->get( $arrDisplayColumn );
                 }
             }
+
             $arrOutputData = $result;
         }
 
@@ -166,7 +118,7 @@ class AfCloudStorage
         {
             $this->_GetDBWhereData($id);
 
-            $arrResultColumn = $this->GetTablesColumn(1);
+            $arrResultColumn = $this->GetTablesColumn(true);
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
@@ -273,12 +225,12 @@ class AfCloudStorage
 
     /**
      * 获取对应表的设置数据
-     * @param string $sFlag
+     * @param boolean $vFlag
      * @return array
-     * if   $sFlag为空返回所有数据
-     * else 只返回相关的字段
+     *  $vFlag为false 返回所有数据
+     *           true 只返回相关的字段
      */
-    public function GetTablesColumn( $vFlag = '' )
+    public function GetTablesColumn( $vFlag = false )
     {
         $arrTablesColumn = array();
 
@@ -287,7 +239,7 @@ class AfCloudStorage
 
         if( $this->m_sDBTableName == AfCloudStorageConst::$m_str_SetupTablesName )
         {
-            if( 'Admin' == $this->m_sRequestForm && '' != $vFlag )
+            if( 'Admin' == $this->m_sRequestForm && true == $vFlag )
             {
                 $arrTablesColumn = AfCloudStorageConst::$m_arr_SetupTablesList;
             }
@@ -301,7 +253,7 @@ class AfCloudStorage
                 $objTablesData->where('_Display', 0);
             }
 
-            if( '' != $vFlag )
+            if( true == $vFlag )
             {
                 $arrResult = $objTablesData->get( ['_Column'] );
 
@@ -312,13 +264,79 @@ class AfCloudStorage
             }
         }
 
-        if( '' == $vFlag )
+        if( false == $vFlag )
         {
             $arrTablesColumn = $objTablesData->get();
         }
 
         return $arrTablesColumn;
     }
+
+
+
+    /**
+     * 设置参数
+     * @param array $arrMData
+     * @param bool $bFlag
+     */
+    public function SetVar( $arrMData = [], $bFlag = false )
+    {
+        if( array_key_exists( '_afDBTableName', $arrMData ) )
+        {
+            $this->m_sDBTableName = $arrMData['_afDBTableName'];
+        }
+
+        if( array_key_exists( '_afArrInputData', $arrMData ) )
+        {
+            if( true == $bFlag )
+            {
+                $this->m_arrInputData = $arrMData['_afArrInputData'];
+            }
+            else
+            {
+                $this->m_arrInputData = array_merge( $this->m_arrInputData, $arrMData['_afArrInputData'] );
+            }
+        }
+
+        $this->_SetSomeData();
+    }
+
+    /**
+     * 获取参数
+     * @return array
+     */
+    public function GetVar()
+    {
+        $arrRtnData = array();
+        $arrRtnData['_afRequestForm']   = $this->m_sRequestForm;
+        $arrRtnData['_afDBTableName']   = $this->m_sDBTableName;
+        $arrRtnData['_afArrInputData']   = $this->m_arrInputData;
+
+        return $arrRtnData;
+    }
+
+
+    /**
+     * 获取Afid
+     * @return string
+     */
+    public function GetAfid()
+    {
+        $afid     =  substr(md5(microtime().rand(0,9999).rand(0,9999)),8,16);
+
+        if( '' != $this->m_sDBTableName )
+        {
+            $this->_GetDBWhereData( $afid );
+            $arrCheck = $this->m_oDBLink->first();
+
+            if( CLib::IsArrayWithKeys( $arrCheck ) )
+            {
+                $this->GetAfid();
+            }
+        }
+        return $afid;
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////////
     //  Private
@@ -333,18 +351,19 @@ class AfCloudStorage
 
         // 判断是或否为后台请求
         $this->m_sAfCloudForm = !empty( Config::get('app.afcloud.form') ) ? Config::get('app.afcloud.form') : 'admin';
-        if( ! empty( $this->m_arrInputData['form'] ) && $this->m_arrInputData['form'] == $this->m_sAfCloudForm )
-        {
-            $this->m_sRequestForm = 'Admin';
-        }
-        else
-        {
-            $this->m_sRequestForm = 'Index';
-        }
 
         // 获取操作表名
-        $this->m_sDBTableName = isset( $this->m_arrInputData['class'] )?$this->m_arrInputData['class']:'';
+        $this->m_sDBTableName = isset( $this->m_arrInputData['_afClass'] )?$this->m_arrInputData['_afClass']:'';
 
+        $this->_SetSomeData();
+    }
+
+
+    /**
+     * 设置操作表名和请求来源
+     */
+    private function _SetSomeData()
+    {
         // 判断连接数据库(目前未做mysql数据库支持)
         if( 'mysql' == $this->m_sDBDriver )
         {
@@ -352,10 +371,19 @@ class AfCloudStorage
         }
         else
         {
-            $this->m_oDBLink = DB::collection( $this->m_sDBTableName );
+            $this->m_oDBLink = DB::collection($this->m_sDBTableName);
+        }
+
+        // 请求来源
+        if( ! empty( $this->m_arrInputData['_afForm'] ) && $this->m_arrInputData['_afForm'] == $this->m_sAfCloudForm )
+        {
+            $this->m_sRequestForm = 'Admin';
+        }
+        else
+        {
+            $this->m_sRequestForm = 'Index';
         }
     }
-
 
     /**
      * 保存 / 修改对象
@@ -402,7 +430,7 @@ class AfCloudStorage
             else
             {
                 $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
-                $arrTablesData['_afid']       = substr(md5(microtime().rand(0,999).rand(0,999)),8,16);
+                $arrTablesData['_afid']    = $this->GetAfid();
                 $this->m_oDBLink->insert( $arrTablesData );
             }
             $nRet = true;
@@ -441,13 +469,13 @@ class AfCloudStorage
         if( 'setup' == $sFlag && 'Admin' == $this->m_sRequestForm )
         {
             // 获取数据
-            $arrColumn   =  AfCloudStorageConst::$m_arr_SetupTablesList;
+            $arrColumn      =  AfCloudStorageConst::$m_arr_SetupTablesList;
             // 验证规则
-            $arrDataRule = AfCloudStorageConst::$m_arr_SetupTablesListRule;
+            $arrDataRule    = AfCloudStorageConst::$m_arr_SetupTablesListRule;
             // 字段描述
             // $arrDataDesc = AfCloudStorageConst::$m_arr_SetupTablesListDesc;
             // 字段类型
-            $arrDataType = AfCloudStorageConst::$m_arr_SetupTablesListType;
+            $arrDataType    = AfCloudStorageConst::$m_arr_SetupTablesListType;
             // 默认值
             $arrDataDefault = array();
         }
@@ -597,7 +625,7 @@ class AfCloudStorage
      */
     private function _GetDBWhereData( $id = '' )
     {
-        $arrWhere = $this->_GetArrDataTosKey('where');
+        $arrWhere = $this->_GetArrDataTosKey('_afWhere');
 
         $conform  = [
             'gt' => '>' ,
@@ -650,7 +678,6 @@ class AfCloudStorage
         }
 
         return $this->m_oDBLink;
-
     }
 
     /**
@@ -660,7 +687,7 @@ class AfCloudStorage
      */
     private function _GetDBOtherData()
     {
-        $arrOther = $this->_GetArrDataTosKey('other');
+        $arrOther = $this->_GetArrDataTosKey('_afOther');
 
         if( ! array_key_exists( 'limit' , $arrOther ) )
         {
@@ -743,7 +770,7 @@ class AfCloudStorage
     {
         $result = array();
 
-        $arrGet   = $this->_GetArrDataTosKey('get');
+        $arrGet   = $this->_GetArrDataTosKey('_afGet');
 
         if( CLib::IsArrayWithKeys( $arrGet ) )
         {
@@ -845,7 +872,12 @@ class AfCloudStorage
 
         if( CLib::IsArrayWithKeys( $this->m_arrInputData, [ $sKey ] ) )
         {
-            $arrRetn = json_decode( $this->m_arrInputData[ $sKey ] , true );
+            $arrData = json_decode( $this->m_arrInputData[ $sKey ] , true );
+
+            if( CLib::IsArrayWithKeys( $arrData ))
+            {
+                $arrRetn = $arrData;
+            }
         }
 
         return $arrRetn;

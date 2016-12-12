@@ -25,7 +25,7 @@ class AfCloudStorageConst
         '_Type'       =>    'str',  // 类型
         '_Default'    =>    'str',  // 默认值
         '_Describe'   =>    'str',  // 描述
-        '_Verify'     =>    'str',  // 验证规则
+        '_Verify'     =>    'array',  // 验证规则
         '_Sort'       =>    'int',  // 排序
         '_Display'    =>    'int',  // 客户端不可见
     );

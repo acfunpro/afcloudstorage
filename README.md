@@ -10,7 +10,7 @@
 			'form'=>'admin',
 			'take' => 10
 		),
-		form值用来与url中form参数对比，如果相等则为后台请求,若不设置默认为admin
+		form值用来与url中_afForm参数对比，如果相等则为后台请求,若不设置默认为admin
 		take值为限制返回条数，默认为20条
 		在providers中加入
 			Jenssegers\Mongodb\MongodbServiceProvider::class,
@@ -26,11 +26,11 @@
 	
 	执行 $ php artisan make:middleware AfCloudMiddleware
 	生成/app/Http/Middleware/目录下生成AfCloudMiddleware.php
-	修改handle方法为
+	修改handle方法为 因为_afClass是必须存在的，加入中间件判断
 	public function handle($request, Closure $next)
 	{
 		$arrInputData = Input::all();
-		if( !empty( $arrInputData[ 'class' ] ) && ! preg_match( '/[^\w\-]/' , $arrInputData[ 'class' ] ) )
+		if( !empty( $arrInputData[ '_afClass' ] ) && ! preg_match( '/[^\w\-]/' , $arrInputData[ '_afClass' ] ) )
 		{
 			return $next($request);
 		}
@@ -65,60 +65,81 @@
 	保留表名：_SetupTables (对所有表的列设置信息)
 			_LogTables   (接口请求日志)
 	请求示例：
-		{url}?class=test&where={"name":["lk","test%"],"id":["gt":"3"]}&other={"order":["sort","asc"]}
+		{url}?_afClass=test&_afWhere={"name":["lk","test%"],"id":["gt":"3"]}&_afOther={"order":["sort","asc"]}
 			
-####前台请求方式
+####提供方法
 	基于RESTful设计原则
+	
+	$arrOutPutData 接收返回数据
+	$sErroeMsg     返回错误信息
+	$nCall         错误码 0为正常
+	
 	获取全部对象
 		$AfCloud = AfCloudStorage::GetInstance();
 		$nCall  = $AfCloud->GetIndex( $arrOutPutData, $sErroeMsg );
 
 	获取一个对象
-		$AfCloud = AfCloudStorage::GetInstance();
 		$nCall  = $AfCloud->GetShow( $arrOutPutData, $sErroeMsg, $id );
 		
 	创建对象
-		$AfCloud = AfCloudStorage::GetInstance();
 		$nCall  = $AfCloud->PostStore( $arrOutPutData, $sErroeMsg );
 	
 	修改对象
-		$AfCloud = AfCloudStorage::GetInstance();
 		$nCall  = $AfCloud->PostStore( $arrOutPutData, $sErroeMsg, $id );
 	
 	删除对象
-		$AfCloud = AfCloudStorage::GetInstance();
 		$nCall  = $AfCloud->GetDestroy( $arrOutPutData, $sErroeMsg, $id );
+	
+	获取对应表的设置数据   $vFlag为false 返回所有数据 / true 只返回相关的字段
+		$nCall  = $AfCloud->GetTablesColumn( $vFlag = false );
+	
+	设置参数
+		参数： $arrMData 键名接受 _afDBTableName，_afArrInputData
+		          _afDBTableName  操作的表名
+		          _afArrInputData 条件设置 _afForm，_afWhere，_afOther 
+		      $bFlag false将_afArrInputData的参数追加到url的参数
+		              true将_afArrInputData的参数覆盖url的参数
+		$nCall  = $AfCloud->SetVar( $arrMData = [], $bFlag = false );
 
+	获取参数
+			_afRequestForm  返回值 Index为前台请求 ／ Admin为后台请求
+			_afDBTableName  返回值 操作的表名
+			_afArrInputData 返回值 查询条件
+		$nCall  = $AfCloud->GetVar();
+		
+	获取对_afid
+		定义为主键id生成规则：substr(md5(microtime().rand(0,9999).rand(0,9999)),8,16);
+		$nCall  = $AfCloud->GetAfid();
 		
 ####前台请求URL
-	get     {url}?class=test   获取全部对象
+	get     {url}?_afClass=test   获取全部对象
 			实现方法  GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' )
 			
-	get     {url}/1?class=test  获取一个对象 默认字段为id
+	get     {url}/1?_afClass=test  获取一个对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法  GetShow( array & $arrOutputData = [], & $sErroeMsg = '', $id )
 			
-	post    {url}?class=test   创建对象
+	post    {url}?_afClass=test   创建对象
 			实现方法  PostStore( array & $arrOutputData = [], & $sErroeMsg = '')
 
-	put     {url}/1?class=test  修改一个对象 默认字段为id
+	put     {url}/1?_afClass=test  修改一个对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法	PostStore( array & $arrOutputData = [], & $sErroeMsg = '', $id = '' )
 
-	delete  {url}/1?class=test  删除对象 默认字段为id
+	delete  {url}/1?_afClass=test  删除对象 默认字段为id
 				若字段名为mid则写成
 				{url}/mid.1
 			实现方法	GetDestroy( &$arrOutputData, &$sErroeMsg, $id = '' )
 
 ####前台参数
 	带*为必填
-		*class = test       // 表名
-		 form  = admin      // 标明来源
+		*_afClass = test       // 表名
+		 _afForm  = admin      // 标明来源
 		
-		where = {"name":"abc"}   // 返回name值为abc的数据
-		where = {"id",["gt","5"]} // 返回id大于5的数据
+		_afWhere = {"name":"abc"}   // 返回name值为abc的数据
+		_afWhere = {"id",["gt","5"]} // 返回id大于5的数据
 			// gt处可选参数
 			[
 				'gt' => '>' ,
@@ -129,30 +150,30 @@
 				'ne' => '!=',
 				'lk' => 'like'     // {"name",["lk","%name%"]}
 			];
-		where = {"id":["in",["1","2"]]}      // 返回id in(1,2)
-		where = {"sort":["bw",["1","10"]]}   // 返回sort为 1到10 之间的数据
+		_afWhere = {"id":["in",["1","2"]]}      // 返回id in(1,2)
+		_afWhere = {"sort":["bw",["1","10"]]}   // 返回sort为 1到10 之间的数据
 		
 		
 		   // 返回0到10条数据
-		other = {"limit":"10"}
+		_afOther = {"limit":"10"}
 				{"limit":["0","10"]}
 		   // 按照sort排序
-		other = {"order",["sort"]}       // 倒序
+		_afOther = {"order",["sort"]}       // 倒序
 				{"order",["sort","asc"]}   // 正序
 		   // groupby sid
-		other = {"group":"sid"}
+		_afOther = {"group":"sid"}
 			// id为2的数据total字段递增
-		where={"id":"2"}&other={"inc",["total"]}        // 递增 1
-		where={"id":"2"}&other={"inc",["total","5"]}    // 递增 5
+		_afWhere={"id":"2"}&_afOther={"inc",["total"]}        // 递增 1
+		_afWhere={"id":"2"}&_afOther={"inc",["total","5"]}    // 递增 5
 			// id为2的数据total字段递减
-		where={"id":"2"}&other={"dec",["total"]}        // 递减 1
-		where={"id":"2"}&other={"dec",["total","5"]}    // 递减 5
+		_afWhere={"id":"2"}&_afOther={"dec",["total"]}        // 递减 1
+		_afWhere={"id":"2"}&_afOther={"dec",["total","5"]}    // 递减 5
 		
 		
 		
 		// item = once 返回单条; 默认返回所有; (num, max, min, avg, sum 参数除外)
-		get   = {"num":"1"}	// 返回符合条件的总数据量
-		get   = {"max":"id"} // 返回最大id  可选参数有( max, min, avg, sum ）
+		_afGet   = {"num":"1"}	// 返回符合条件的总数据量
+		_afGet   = {"max":"id"} // 返回最大id  可选参数有( max, min, avg, sum ）
 
 
 
@@ -161,26 +182,31 @@
         // 实例化
         $AfCloud = AfCloudStorage::GetInstance();
         
-        // 调用SetVar方法设置操作的表,
+        // 调用SetVar方法设置操作的表
+              (_SetupTables 表所有操作一定要加_afForm={default_admin})
+              _afArrInputData 参数：
+              			_afForm   设置请求来源
+              			_afWhere  请求条件
+              			_afOther  排序等操作
+              			_afGet    聚合函数
+              			以上参数均参考 @前台参数 内容
         $AfCloud -> SetVar(
             [
                 'sDBTableName'=>'_SetupTables',
                 '_afArrInputData'=>[
-                                    '_afform' => 'admin',
+                                    '_afForm' => 'admin',
                                     _afWhere'{"_Table":"ouqi"}'
                                 ]
             ]
         );
-                $AfCloud->setVar($sArrMData);
-        例：
         
-            $AfCloud = AfCloudStorage::GetInstance();
-            查询配置表中所有对象
-              (_SetupTables 表所有操作一定要加form={default_admin})
-            $AfCloud -> SetVar(['sDBTableName'=>'_SetupTables','arrInputData'=>['form'=>'admin']]);
-            
-            
-            print_r($AfCloud->GetAfid());die;
+        $AfCloud->setVar($sArrMData);
+        
+        // 获取符合条件的所有对象
+        $AfCloud->GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' );
+			
+			同 @前台请求方式 
+
 
 ####配置表信息设置
     _LogTables        // 日志表
@@ -236,6 +262,8 @@
 			{{url}}/api/auto/id.123 将强制忽略id为123的数据
 			
 			
-			默认不能访问_SetupTables表中内容，需要在url中添加&form={默认为admin}，确认是后台请求
+			默认不能访问_SetupTables表中内容，需要在url中添加&form={default_admin}，确认是后台请求
+
+
 
 
