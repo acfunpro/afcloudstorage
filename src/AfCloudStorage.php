@@ -29,6 +29,8 @@ class AfCloudStorage
 
     protected $m_arrInputData;
 
+    protected $m_itake;
+
     protected $m_sRequestForm;
 
     public function __construct()
@@ -79,7 +81,7 @@ class AfCloudStorage
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
-                if ( CLib::IsArrayWithKeys( $arrGet, '_afItem' ) )
+                if ( CLib::IsArrayWithKeys( $arrGet, 'item' ) )
                 {
                     $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
                 }
@@ -112,11 +114,14 @@ class AfCloudStorage
      */
     public function GetShow( array & $arrOutputData = [], & $sErroeMsg = '', $id )
     {
+        $result = array();
         $nRet = AfCloudStorageConst::ERROR_ACCESS_CLASS_NO_EXIST;
 
         if( $this->_CheckStrClass() )
         {
             $this->_GetDBWhereData($id);
+
+            $this->_GetDBOtherData();
 
             $arrResultColumn = $this->GetTablesColumn(true);
 
@@ -125,8 +130,10 @@ class AfCloudStorage
                 $nRet = AfCloudStorageConst::ERROR_SUCCESS;
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
-                $arrOutputData    = $this->m_oDBLink->first( $arrDisplayColumn );
+                $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
             }
+
+            $arrOutputData = $result;
         }
 
         $this->m_sRequestType            = 'Show';
@@ -198,17 +205,26 @@ class AfCloudStorage
 
             if( AfCloudStorageConst::$m_str_SetupTablesName != $this->m_sDBTableName || 'Index' != $this->m_sRequestForm )
             {
+                $this->_GetDBWhereData();
+
                 if( ! empty( $arrId[1] ) )
                 {
-                    $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[1] ) )
+                    $bStatus = $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[0], $arrId[1] ) )
                         ->delete();
                 }
                 else
                 {
-                    $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) )
+                    $bStatus = $this->m_oDBLink->where( '_afid' , $arrId[0] )
                         ->delete();
                 }
-                $nRet = AfCloudStorageConst::ERROR_SUCCESS;
+                if( $bStatus )
+                {
+                    $nRet = AfCloudStorageConst::ERROR_SUCCESS;
+                }
+                else
+                {
+                    $sErroeMsg = '操作失败';
+                }
             }
         }
 
@@ -269,6 +285,10 @@ class AfCloudStorage
             $arrTablesColumn = $objTablesData->get();
         }
 
+        $this->m_sRequestType            = 'Column';
+        $this->m_arrOutputData['data']   = $arrTablesColumn;
+        $this->_SaveLog();
+
         return $arrTablesColumn;
     }
 
@@ -298,7 +318,16 @@ class AfCloudStorage
             }
         }
 
+        if( array_key_exists( '_afTake', $arrMData ) )
+        {
+            $this->m_itake        = intval( $arrMData['_afTake'] );
+        }
+
         $this->_SetSomeData();
+
+        $this->m_sRequestType            = 'SetVar';
+        $this->m_arrOutputData['data']   = [ $arrMData ,$bFlag ];
+        $this->_SaveLog();
     }
 
     /**
@@ -308,9 +337,14 @@ class AfCloudStorage
     public function GetVar()
     {
         $arrRtnData = array();
-        $arrRtnData['_afRequestForm']   = $this->m_sRequestForm;
-        $arrRtnData['_afDBTableName']   = $this->m_sDBTableName;
+        $arrRtnData['_afTake']           = $this->m_itake;
+        $arrRtnData['_afRequestForm']    = $this->m_sRequestForm;
+        $arrRtnData['_afDBTableName']    = $this->m_sDBTableName;
         $arrRtnData['_afArrInputData']   = $this->m_arrInputData;
+
+        $this->m_sRequestType            = 'GetVar';
+        $this->m_arrOutputData['data']   = $arrRtnData;
+        $this->_SaveLog();
 
         return $arrRtnData;
     }
@@ -334,6 +368,11 @@ class AfCloudStorage
                 $this->GetAfid();
             }
         }
+
+        $this->m_sRequestType            = 'GetAfid';
+        $this->m_arrOutputData['data']   = $this->m_sDBTableName.'-'.$afid;
+        $this->_SaveLog();
+
         return $afid;
     }
 
@@ -354,6 +393,9 @@ class AfCloudStorage
 
         // 获取操作表名
         $this->m_sDBTableName = isset( $this->m_arrInputData['_afClass'] )?$this->m_arrInputData['_afClass']:'';
+
+        // 获取默认分页条数
+        $this->m_itake        = !empty( Config::get('app.afcloud.take') ) ? Config::get('app.afcloud.take') : 10;
 
         $this->_SetSomeData();
     }
@@ -410,6 +452,10 @@ class AfCloudStorage
 
         if( CLib::IsArrayWithKeys( $arrTablesData ) )
         {
+            $this->_GetDBWhereData();
+
+            $this->_GetDBOtherData();
+
             if( '' != $id )
             {
                 $arrId = explode('.', $id);
@@ -418,12 +464,12 @@ class AfCloudStorage
 
                 if( ! empty( $arrId[1] ) )
                 {
-                    $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[1] ) )
+                    $nRet = $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[0], $arrId[1] ) )
                         ->update( $arrTablesData );
                 }
                 else
                 {
-                    $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) )
+                    $nRet = $this->m_oDBLink->where( '_afid' , $arrId[0] )
                         ->update( $arrTablesData );
                 }
             }
@@ -431,9 +477,13 @@ class AfCloudStorage
             {
                 $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
                 $arrTablesData['_afid']    = $this->GetAfid();
-                $this->m_oDBLink->insert( $arrTablesData );
+                $nRet = $this->m_oDBLink->insert( $arrTablesData );
             }
-            $nRet = true;
+
+            if( ! $nRet )
+            {
+                $sErroeMsg = '操作失败';
+            }
         }
 
         return $nRet;
@@ -561,11 +611,9 @@ class AfCloudStorage
                 }
             }
 
-
             if( '' == $sErroeMsg)
             {
                 $validator   = app( 'validator' )->make( $arrPostData, $arrDataRule );
-
 
                 if( $validator->passes() )
                 {
@@ -577,15 +625,15 @@ class AfCloudStorage
                             $arrPostData[$sKey] = $arrDataDefault[$sKey];
                         }
                         // 类型验证
-                        if( in_array( $arrDataType[ $sKey ] ,['str','text'] ) )
+                        if( in_array( $arrDataType[ $sKey ] ,AfCloudStorageConst::$m_arr_StrData ) )
                         {
                             $arrPostData[ $sKey ] = strval( $arrPostData[ $sKey ] );
                         }
-                        elseif( in_array( $arrDataType[ $sKey ] ,['int'] ) )
+                        elseif( in_array( $arrDataType[ $sKey ] ,AfCloudStorageConst::$m_arr_IntData ) )
                         {
                             $arrPostData[ $sKey ] = intval( $arrPostData[ $sKey ] );
                         }
-                        elseif( in_array( $arrDataType[ $sKey ] ,['array','file'] ) )
+                        elseif( in_array( $arrDataType[ $sKey ] ,AfCloudStorageConst::$m_arr_ArrData ) )
                         {
                             if( ! is_array($arrPostData[ $sKey ]) )
                             {
@@ -643,13 +691,13 @@ class AfCloudStorage
             {
                 if( CLib::IsExistingString( $val ) )
                 {
-                    $this->m_oDBLink->where( $key , $this->_GetVarType( $val ) );
+                    $this->m_oDBLink->where( $key , $this->_GetVarType( $key, $val ) );
                 }
                 elseif( CLib::IsArrayWithKeys( $val ) )
                 {
                     if( array_key_exists( $val[0] , $conform ) )
                     {
-                        $this->m_oDBLink->where( $key , $conform[ $val[0] ], $this->_GetVarType( $val[1] ) );
+                        $this->m_oDBLink->where( $key , $conform[ $val[0] ], $this->_GetVarType( $key, $val[1] ) );
                     }
                     elseif( 'in' == $val[0] )
                     {
@@ -669,11 +717,11 @@ class AfCloudStorage
 
             if( ! empty( $arrId[1] ) )
             {
-                $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[1] ) );
+                $this->m_oDBLink->where( $arrId[0] , $this->_GetVarType( $arrId[0], $arrId[1] ) );
             }
             else
             {
-                $this->m_oDBLink->where( '_afid' , $this->_GetVarType( $arrId[0] ) );
+                $this->m_oDBLink->where( '_afid' , $arrId[0] );
             }
         }
 
@@ -691,8 +739,7 @@ class AfCloudStorage
 
         if( ! array_key_exists( 'limit' , $arrOther ) )
         {
-            $take = !empty( Config::get('app.afcloud.take') ) ? Config::get('app.afcloud.take') : 20;
-            $this->m_oDBLink->take( intval( $take ) );
+            $this->m_oDBLink->take( $this->m_itake );
         }
 
         if( CLib::IsArrayWithKeys( $arrOther ) )
@@ -841,18 +888,33 @@ class AfCloudStorage
      * @param $var
      * @return int|string
      */
-    private function _GetVarType( $var )
+    private function _GetVarType( $Column = '', $var = '' )
     {
-        if( is_numeric( $var ) )
+        $RVal = '';
+
+        $result = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName )
+                        ->where('_Table',$this->m_sDBTableName)
+                        ->where('_Column', $Column)
+                        ->first();
+
+        if( !empty( $result ) )
         {
-            $Retn = intval($var);
-        }
-        elseif( is_string( $var ) )
-        {
-            $Retn = strval( $var );
+            // 类型验证
+            if( in_array( $result[ '_Column' ] ,AfCloudStorageConst::$m_arr_StrData ) )
+            {
+                $RVal = strval( $var );
+            }
+            elseif( in_array( $result[ '_Column' ] ,AfCloudStorageConst::$m_arr_IntData ) )
+            {
+                $RVal = intval( $var );
+            }
+            else
+            {
+                $RVal = strval( $var );
+            }
         }
 
-        return $Retn;
+        return $RVal;
     }
 
     /**

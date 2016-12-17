@@ -97,8 +97,8 @@
 		参数： $arrMData 键名接受 _afDBTableName，_afArrInputData
 		          _afDBTableName  操作的表名
 		          _afArrInputData 条件设置 _afForm，_afWhere，_afOther 
-		      $bFlag false将_afArrInputData的参数追加到url的参数
-		              true将_afArrInputData的参数覆盖url的参数
+		      $bFlag false将_afArrInputData的参数覆盖url的参数
+		              true将_afArrInputData的参数追加到url的参数
 		$nCall  = $AfCloud->SetVar( $arrMData = [], $bFlag = false );
 
 	获取参数
@@ -189,13 +189,14 @@
               			_afWhere  请求条件
               			_afOther  排序等操作
               			_afGet    聚合函数
+              _afTake 设置查询条数
               			以上参数均参考 @前台参数 内容
         $AfCloud -> SetVar(
             [
-                'sDBTableName'=>'_SetupTables',
+                '_afDBTableName'=>'_SetupTables',
                 '_afArrInputData'=>[
-                                    '_afForm' => 'admin',
-                                    _afWhere'{"_Table":"ouqi"}'
+                                    '_afForm'  => 'admin',
+                                    '_afWhere' => '{"_Table":"ouqi"}'
                                 ]
             ]
         );

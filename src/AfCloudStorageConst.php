@@ -49,6 +49,19 @@ class AfCloudStorageConst
         '_Sort'       =>    '排序',        // 排序
         '_Display'    =>    '客户端不可见',  // 客户端不可见
     );
+
+    // 转换字段类型
+    static public $m_arr_StrData = array(
+        'str',
+        'text'
+    );
+    static public $m_arr_IntData = array(
+        'int'
+    );
+    static public $m_arr_ArrData = array(
+        'array',
+        'file'
+    );
 	//
 	//	common error codes
 	//
