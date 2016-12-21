@@ -74,10 +74,11 @@ class AfCloudStorage
 
                 // 拼接查询条件
                 $this->_GetDBWhereData();
-                $this->_GetDBOtherData();
 
                 // 获取sum num max min avg值
                 $result = $this->_GetDBGetData();
+
+                $this->_GetDBOtherData();
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
@@ -907,11 +908,11 @@ class AfCloudStorage
         if( !empty( $result ) )
         {
             // 类型验证
-            if( in_array( $result[ '_Column' ] ,AfCloudStorageConst::$m_arr_StrData ) )
+            if( in_array( $result[ '_Type' ] ,AfCloudStorageConst::$m_arr_StrData ) )
             {
                 $RVal = strval( $var );
             }
-            elseif( in_array( $result[ '_Column' ] ,AfCloudStorageConst::$m_arr_IntData ) )
+            elseif( in_array( $result[ '_Type' ] ,AfCloudStorageConst::$m_arr_IntData ) )
             {
                 $RVal = intval( $var );
             }
