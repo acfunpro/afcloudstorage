@@ -892,10 +892,17 @@ class AfCloudStorage
     {
         $RVal = '';
 
-        $result = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName )
-                        ->where('_Table',$this->m_sDBTableName)
-                        ->where('_Column', $Column)
-                        ->first();
+        if( AfCloudStorageConst::$m_str_SetupTablesName == $this->m_sDBTableName )
+        {
+            $result = AfCloudStorageConst::$m_arr_SetupTablesListType;
+        }
+        else
+        {
+            $result = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName )
+                            ->where('_Table',$this->m_sDBTableName)
+                            ->where('_Column', $Column)
+                            ->first();
+        }
 
         if( !empty( $result ) )
         {

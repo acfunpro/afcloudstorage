@@ -33,9 +33,9 @@ class AfCloudStorageConst
         '_Table'      =>    ['required'], // 表名
         '_Column'     =>    ['required','unique'], // 列名
         '_Type'       =>    ['required'], // 类型
-        '_Default'    =>    [''],         // 默认值
+        '_Default'    =>    [],         // 默认值
         '_Describe'   =>    ['required'], // 描述
-        '_Verify'     =>    [''],         // 验证规则
+        '_Verify'     =>    [],         // 验证规则
         '_Sort'       =>    ['integer'],   // 排序
         '_Display'    =>    ['integer'],   // 客户端不可见
     );
