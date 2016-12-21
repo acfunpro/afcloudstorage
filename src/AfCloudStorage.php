@@ -552,7 +552,7 @@ class AfCloudStorage
         {
             foreach( $arrColumn as $sCv )
             {
-                $arrPostData[$sCv] = @$this->m_arrInputData[$sCv];
+                $arrPostData[$sCv] = !empty( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
             }
 
             // 校验字段验证信息
@@ -583,30 +583,37 @@ class AfCloudStorage
                         }
                         else
                         {
-                            $objQuery = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName)
-                                            ->where('_Table',  $arrPostData['_Table'])
-                                            ->where('_Column', $arrPostData['_Column']);
-
-                            if( '' != $id )
+                            if( !empty( $arrPostData['_Table'] ) && !empty( $arrPostData['_Column'] ) )
                             {
-                                $arrId = explode('.', $id);
+                                $objQuery = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName)
+                                                ->where('_Table',  $arrPostData['_Table'])
+                                                ->where('_Column', $arrPostData['_Column']);
 
-                                if( ! empty( $arrId[1] ) )
+                                if( '' != $id )
                                 {
-                                    $objQuery->where($arrId[0], '!=', $arrId[1]);
+                                    $arrId = explode('.', $id);
+
+                                    if( ! empty( $arrId[1] ) )
+                                    {
+                                        $objQuery->where($arrId[0], '!=', $arrId[1]);
+                                    }
+                                    else
+                                    {
+                                        $objQuery->where('_afid', '!=', $arrId[0]);
+                                    }
                                 }
-                                else
+
+                                if($objQuery->count() > 0)
                                 {
-                                    $objQuery->where('_afid', '!=', $arrId[0]);
+                                    $sErroeMsg = "The _Column has already been taken.";
+                                    break 2;
                                 }
+                                unset($arrDataRule[$sSKey]);
                             }
-
-                            if($objQuery->count() > 0)
+                            else
                             {
-                                $sErroeMsg = "The _Column has already been taken.";
-                                break 2;
+                                $sErroeMsg = '错误请求';
                             }
-                            unset($arrDataRule[$sSKey]);
                         }
                     }
                 }
