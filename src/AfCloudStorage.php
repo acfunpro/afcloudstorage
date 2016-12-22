@@ -552,7 +552,7 @@ class AfCloudStorage
         {
             foreach( $arrColumn as $sCv )
             {
-                $arrPostData[$sCv] = !empty( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
+                $arrPostData[$sCv] = isset( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
             }
 
             // 校验字段验证信息
