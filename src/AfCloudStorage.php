@@ -552,7 +552,21 @@ class AfCloudStorage
         {
             foreach( $arrColumn as $sCv )
             {
-                $arrPostData[$sCv] = isset( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
+                if( '' != $id )
+                {
+                    if( isset( $this->m_arrInputData[$sCv] ) )
+                    {
+                        $arrPostData[$sCv] = $this->m_arrInputData[$sCv];
+                    }
+                    else
+                    {
+                        unset( $arrDataRule[$sCv] );
+                    }
+                }
+                else
+                {
+                    $arrPostData[$sCv] = !empty( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
+                }
             }
 
             // 校验字段验证信息
@@ -697,7 +711,7 @@ class AfCloudStorage
         {
             foreach ( $arrWhere as $key => $val )
             {
-                if( CLib::IsExistingString( $val ) )
+                if( ! CLib::IsArrayWithKeys( $val ) )
                 {
                     $this->m_oDBLink->where( $key , $this->_GetVarType( $key, $val ) );
                 }
