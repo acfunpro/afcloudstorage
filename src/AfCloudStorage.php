@@ -768,59 +768,66 @@ class AfCloudStorage
         {
             if( array_key_exists( 'limit' , $arrOther ) )
             {
-                if( CLib::SafeIntVal( @$arrOther['limit'][1] ) == 0 )
-                {
-                    $this->m_oDBLink->take( intval( $arrOther['limit'][0] ) );
-                }
-                else
+                if( CLib::IsArrayWithKeys( $arrOther['limit'] ) )
                 {
                     $this->m_oDBLink->skip( intval( $arrOther['limit'][0] ) );
                     $this->m_oDBLink->take( intval( $arrOther['limit'][1] ) );
+                }
+                else
+                {
+                    $this->m_oDBLink->take( intval( $arrOther['limit'] ) );
                 }
             }
 
             if( array_key_exists( 'order' , $arrOther ) )
             {
-                if( CLib::IsExistingString( @$arrOther['order'][1] ) == 'asc' )
+                if( CLib::IsArrayWithKeys( $arrOther['order'] ) )
                 {
-                    $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'asc' );
+                    if( 'asc' == $arrOther['order'][1] )
+                    {
+                        $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'asc' );
+                    }
+                    else
+                    {
+                        $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'desc' );
+                    }
                 }
                 else
                 {
-                    $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'desc' );
+                    $this->m_oDBLink->orderBy( $arrOther['order'] , 'desc' );
                 }
             }
 
             if( array_key_exists( 'group' , $arrOther ) )
             {
-                if( CLib::IsExistingString( @$arrOther['group'][0] ) )
+                if( CLib::IsExistingString( $arrOther['group'] ) )
                 {
-                    $this->m_oDBLink->groupBy( $arrOther['group'][0] );
+                    $this->m_oDBLink->groupBy( $arrOther['group'] );
                 }
             }
 
             if( array_key_exists( 'inc' , $arrOther ) )
             {
-                if( CLib::SafeIntVal( @$arrOther['inc'][1] ) != 0 )
+                if( CLib::IsArrayWithKeys( $arrOther['inc'] ) )
                 {
                     $this->m_oDBLink->increment( $arrOther['inc'][0] , intval( $arrOther['inc'][1] ) );
                 }
                 else
                 {
-                    $this->m_oDBLink->increment( $arrOther['inc'][0] );
+                    $this->m_oDBLink->increment( $arrOther['inc'] );
                 }
 
             }
 
             if( array_key_exists( 'dec' , $arrOther ) )
             {
-                if( CLib::SafeIntVal( @$arrOther['dec'][1] ) != 0 )
+                if( CLib::IsArrayWithKeys( $arrOther['dec'] ) )
                 {
                     $this->m_oDBLink->decrement( $arrOther['dec'][0] , intval( $arrOther['dec'][1] ) );
                 }
                 else
                 {
-                    $this->m_oDBLink->decrement( $arrOther['dec'][0] );
+                    $this->m_oDBLink->decrement( $arrOther['dec'] );
                 }
 
             }

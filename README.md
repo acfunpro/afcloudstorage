@@ -158,15 +158,15 @@
 		_afOther = {"limit":"10"}
 				{"limit":["0","10"]}
 		   // 按照sort排序
-		_afOther = {"order",["sort"]}       // 倒序
+		_afOther = {"order","sort"}       // 倒序
 				{"order",["sort","asc"]}   // 正序
 		   // groupby sid
 		_afOther = {"group":"sid"}
 			// id为2的数据total字段递增
-		_afWhere={"id":"2"}&_afOther={"inc",["total"]}        // 递增 1
+		_afWhere={"id":"2"}&_afOther={"inc","total"}        // 递增 1
 		_afWhere={"id":"2"}&_afOther={"inc",["total","5"]}    // 递增 5
 			// id为2的数据total字段递减
-		_afWhere={"id":"2"}&_afOther={"dec",["total"]}        // 递减 1
+		_afWhere={"id":"2"}&_afOther={"dec","total"}        // 递减 1
 		_afWhere={"id":"2"}&_afOther={"dec",["total","5"]}    // 递减 5
 		
 		
