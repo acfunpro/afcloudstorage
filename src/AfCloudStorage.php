@@ -131,7 +131,11 @@ class AfCloudStorage
                 $nRet = AfCloudStorageConst::ERROR_SUCCESS;
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
-                $result['result'] = $this->m_oDBLink->first( $arrDisplayColumn );
+                $arrData = $this->m_oDBLink->first( $arrDisplayColumn );
+                if( CLib::IsArrayWithKeys( $arrData ) )
+                {
+                    $result['result'] = $arrData;
+                }
             }
 
             $arrOutputData = $result;
@@ -565,7 +569,7 @@ class AfCloudStorage
                 }
                 else
                 {
-                    $arrPostData[$sCv] = !empty( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
+                    $arrPostData[$sCv] = isset( $this->m_arrInputData[$sCv] ) ? $this->m_arrInputData[$sCv] : '';
                 }
             }
 
