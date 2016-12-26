@@ -151,7 +151,9 @@
 				'lk' => 'like'     // {"name",["lk","%name%"]}
 			];
 		_afWhere = {"id":["in",["1","2"]]}      // 返回id in(1,2)
+		_afWhere = {"id":["nin",["1","2"]]}      // 返回id notin(1,2)
 		_afWhere = {"sort":["bw",["1","10"]]}   // 返回sort为 1到10 之间的数据
+		_afWhere = {"sort":["nbw",["1","10"]]}   // 返回sort为 1到10 之外的数据
 		
 		
 		   // 返回0到10条数据
@@ -168,7 +170,8 @@
 			// id为2的数据total字段递减
 		_afWhere={"id":"2"}&_afOther={"dec","total"}        // 递减 1
 		_afWhere={"id":"2"}&_afOther={"dec",["total","5"]}    // 递减 5
-		
+		_afWhere={"num":["eq","0"],"_or":{"start":["gt","2"],"end":"2"}} // num等于0 或者 start大于2 或者 end 等于 2	
+	
 		
 		
 		// item = once 返回单条; 默认返回所有; (num, max, min, avg, sum 参数除外)

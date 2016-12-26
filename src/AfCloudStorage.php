@@ -311,16 +311,13 @@ class AfCloudStorage
             $this->m_sDBTableName = $arrMData['_afDBTableName'];
         }
 
-        if( array_key_exists( '_afArrInputData', $arrMData ) )
+        if( true == $bFlag )
         {
-            if( true == $bFlag )
-            {
-                $this->m_arrInputData = $arrMData['_afArrInputData'];
-            }
-            else
-            {
-                $this->m_arrInputData = array_merge( $this->m_arrInputData, $arrMData['_afArrInputData'] );
-            }
+            $this->m_arrInputData = isset( $arrMData['_afArrInputData'] ) ? $arrMData['_afArrInputData'] : [];
+        }
+        else
+        {
+            $this->m_arrInputData = array_merge( $this->m_arrInputData, isset( $arrMData['_afArrInputData'] ) ? $arrMData['_afArrInputData'] : [] );
         }
 
         if( array_key_exists( '_afTake', $arrMData ) )
@@ -483,6 +480,12 @@ class AfCloudStorage
                 $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
                 $arrTablesData['_afid']    = $this->GetAfid();
                 $nRet = $this->m_oDBLink->insert( $arrTablesData );
+
+                if( $nRet )
+                {
+                    $arrOutputData['_afid'] = $arrTablesData['_afid'];
+                }
+
             }
 
             if( ! $nRet )
@@ -715,13 +718,27 @@ class AfCloudStorage
         {
             foreach ( $arrWhere as $key => $val )
             {
-                if( ! CLib::IsArrayWithKeys( $val ) )
+                if( CLib::IsExistingString( $val ) )
                 {
                     $this->m_oDBLink->where( $key , $this->_GetVarType( $key, $val ) );
                 }
+                elseif( '_or' == $key )
+                {
+                    foreach ( $val as $sKey => $sVal  )
+                    {
+                        if( CLib::IsArrayWithKeys( $sVal ) && array_key_exists( $sVal[0] , $conform ) )
+                        {
+                            $this->m_oDBLink->orWhere( $sKey , $conform[ $sVal[0] ], $this->_GetVarType( $sKey, $sVal[1] ) );
+                        }
+                        elseif (CLib::IsExistingString( $sVal ))
+                        {
+                            $this->m_oDBLink->orWhere( $sKey , $this->_GetVarType( $sKey, $sVal ) );
+                        }
+                    }
+                }
                 elseif( CLib::IsArrayWithKeys( $val ) )
                 {
-                    if( array_key_exists( $val[0] , $conform ) )
+                    if( CLib::IsExistingString( $val[0] ) && array_key_exists( $val[0] , $conform ) )
                     {
                         $this->m_oDBLink->where( $key , $conform[ $val[0] ], $this->_GetVarType( $key, $val[1] ) );
                     }
@@ -729,9 +746,17 @@ class AfCloudStorage
                     {
                         $this->m_oDBLink->whereIn( $key , $val[1] );
                     }
+                    elseif( 'nin' == $val[0] )
+                    {
+                        $this->m_oDBLink->whereNotIn( $key , $val[1] );
+                    }
                     elseif( 'bw' == $val[0] )
                     {
                         $this->m_oDBLink->whereBetween( $key , $val[1] );
+                    }
+                    elseif( 'nbw' == $val[0] )
+                    {
+                        $this->m_oDBLink->whereNotBetween( $key , $val[1] );
                     }
                 }
             }
