@@ -718,7 +718,7 @@ class AfCloudStorage
         {
             foreach ( $arrWhere as $key => $val )
             {
-                if( CLib::IsExistingString( $val ) )
+                if( ! CLib::IsArrayWithKeys( $val ) )
                 {
                     $this->m_oDBLink->where( $key , $this->_GetVarType( $key, $val ) );
                 }
@@ -730,7 +730,7 @@ class AfCloudStorage
                         {
                             $this->m_oDBLink->orWhere( $sKey , $conform[ $sVal[0] ], $this->_GetVarType( $sKey, $sVal[1] ) );
                         }
-                        elseif (CLib::IsExistingString( $sVal ))
+                        elseif ( ! CLib::IsArrayWithKeys( $sVal ) )
                         {
                             $this->m_oDBLink->orWhere( $sKey , $this->_GetVarType( $sKey, $sVal ) );
                         }
