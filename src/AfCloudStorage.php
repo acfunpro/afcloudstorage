@@ -39,13 +39,13 @@ class AfCloudStorage
     }
 
     // 单例
-    static function GetInstance()
+    static function GetInstance( $sKey = '0' )
     {
-        if ( is_null( self::$g_cStaticInstance ) || ! isset( self::$g_cStaticInstance ) )
+        if ( empty( self::$g_cStaticInstance[ $sKey ] ) ||  is_null( self::$g_cStaticInstance[ $sKey ] ) || ! isset( self::$g_cStaticInstance[ $sKey ] ) )
         {
-            self::$g_cStaticInstance = new self();
+            self::$g_cStaticInstance[ $sKey ] = new self();
         }
-        return self::$g_cStaticInstance;
+        return self::$g_cStaticInstance[ $sKey ];
     }
 
 
