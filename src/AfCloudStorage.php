@@ -120,6 +120,8 @@ class AfCloudStorage
 
         if( $this->_CheckStrClass() )
         {
+            $nRet = AfCloudStorageConst::ERROR_SUCCESS;
+
             $this->_GetDBWhereData($id);
 
             $this->_GetDBOtherData();
@@ -128,10 +130,9 @@ class AfCloudStorage
 
             if( CLib::IsArrayWithKeys( $arrResultColumn ) )
             {
-                $nRet = AfCloudStorageConst::ERROR_SUCCESS;
-
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
                 $arrData = $this->m_oDBLink->first( $arrDisplayColumn );
+
                 if( CLib::IsArrayWithKeys( $arrData ) )
                 {
                     $result['result'] = $arrData;
