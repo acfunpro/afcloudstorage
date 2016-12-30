@@ -318,7 +318,24 @@ class AfCloudStorage
         }
         else
         {
-            $this->m_arrInputData = array_merge( $this->m_arrInputData, isset( $arrMData['_afArrInputData'] ) ? $arrMData['_afArrInputData'] : [] );
+            $m_arrInputData = $arrMData['_afArrInputData'];
+            $m_arrInputData['_afWhere'] = isset( $m_arrInputData['_afWhere'] ) ? json_decode( $m_arrInputData['_afWhere'], true ) : [];
+            $m_arrInputData['_afOther'] = isset( $m_arrInputData['_afOther'] ) ? json_decode( $m_arrInputData['_afOther'], true ) : [];
+            $m_arrInputData['_afGet']   = isset( $m_arrInputData['_afGet'] )   ? json_decode( $m_arrInputData['_afGet'], true ) : [];
+
+            $this->m_arrInputData['_afWhere'] = isset( $this->m_arrInputData['_afWhere'] ) ? json_decode( $this->m_arrInputData['_afWhere'], true ) : [];
+            $this->m_arrInputData['_afOther'] = isset( $this->m_arrInputData['_afOther'] ) ? json_decode( $this->m_arrInputData['_afOther'], true ) : [];
+            $this->m_arrInputData['_afGet']   = isset( $this->m_arrInputData['_afGet'] )   ? json_decode( $this->m_arrInputData['_afGet'], true ) : [];
+
+            $this->m_arrInputData['_afWhere'] = json_encode( array_merge( $this->m_arrInputData['_afWhere'], $m_arrInputData['_afWhere'] ) );
+            $this->m_arrInputData['_afOther'] = json_encode( array_merge( $this->m_arrInputData['_afOther'], $m_arrInputData['_afOther'] ) );
+            $this->m_arrInputData['_afGet']   = json_encode( array_merge( $this->m_arrInputData['_afGet'], $m_arrInputData['_afGet'] ) );
+
+            unset($arrMData['_afArrInputData']['_afWhere']);
+            unset($arrMData['_afArrInputData']['_afOther']);
+            unset($arrMData['_afArrInputData']['_afGet']);
+
+            $this->m_arrInputData = array_merge($this->m_arrInputData,$arrMData['_afArrInputData']);
         }
 
         if( array_key_exists( '_afTake', $arrMData ) )
