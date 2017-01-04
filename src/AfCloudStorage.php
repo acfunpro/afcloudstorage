@@ -33,6 +33,8 @@ class AfCloudStorage
 
     protected $m_sRequestForm;
 
+    protected $m_arrSelectAllow;
+
     public function __construct()
     {
         $this->_Init();
@@ -345,6 +347,11 @@ class AfCloudStorage
         if( array_key_exists( '_afTake', $arrMData ) )
         {
             $this->m_itake        = intval( $arrMData['_afTake'] );
+        }
+
+        if( array_key_exists( '_arrSelectAllow', $arrMData ) )
+        {
+            $this->m_arrSelectAllow  = $arrMData['_arrSelectAllow'];
         }
 
         $this->_SetSomeData();
@@ -1000,6 +1007,10 @@ class AfCloudStorage
                 $RVal = strval( $var );
             }
         }
+        else
+        {
+            $RVal = strval( $var );
+        }
 
         return $RVal;
     }
@@ -1025,10 +1036,16 @@ class AfCloudStorage
 
             if( CLib::IsArrayWithKeys( $arrData ))
             {
+                foreach ( $arrData as $sSKey => $sSVal )
+                {
+                    if( isset( $this->m_arrSelectAllow[$sKey] ) && ! in_array( $sSKey, $this->m_arrSelectAllow[$sKey] ) )
+                    {
+                        unset( $arrData[$sSKey] );
+                    }
+                }
                 $arrRetn = $arrData;
             }
         }
-
         return $arrRetn;
     }
 

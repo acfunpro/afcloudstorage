@@ -192,6 +192,12 @@
               			_afWhere  请求条件
               			_afOther  排序等操作
               			_afGet    聚合函数
+              	_arrSelectAllow 设置可查询字段
+              	                _afWhere 对应字段名
+              	                _afOthrt 可以使用limit／group等操作
+              	                _afGet   可以查询聚合函数和count
+              	                不可操作设置为 []
+              	                
               _afTake 设置查询条数
               			以上参数均参考 @前台参数 内容
         $AfCloud -> SetVar(
@@ -199,12 +205,15 @@
                 '_afDBTableName'=>'_SetupTables',
                 '_afArrInputData'=>[
                                     '_afForm'  => 'admin',
-                                    '_afWhere' => '{"_Table":"ouqi"}'
-                                ]
+                                    '_afWhere' => '{"_Table":"ouqi"}',
+                                    '_afGet'   => '{"num":"1"}'
+                                ], 	              '_arrSelectAllow' => [                                   '_afWhere' => ['status', 'type'],                                   '_afOther' => [],
+                                  '_afGet'   => ['num']                                 ]
             ]
         );
         
-        $AfCloud->setVar($sArrMData);
+        $AfCloud->setVar($sArrMData, true);
+        如果setVar的第二个参数设置为 true 第一个参数内容会覆盖用户输入
         
         // 获取符合条件的所有对象
         $AfCloud->GetIndex( array & $arrOutputData = [], & $sErroeMsg = '' );
@@ -225,6 +234,7 @@
         _Verify     // 验证规则
         _Sort       // 排序
         _Display    // 值为1客户端不可见
+        _Tag        // 对应表单标签
    
    	// 配置表字段类型
         _Table      =>    str  // 表名
@@ -235,6 +245,7 @@
         _Verify     =>    str  // 验证规则
         _Sort       =>    int  // 排序
         _Display    =>    int  // 客户端不可见
+        _Tag        =>    str  // 对应表单标签
     
    	// 配置表字段验证规则
 			使用validator（laravel框架内自带验证）
@@ -242,11 +253,12 @@
         _Table      =>    ['required'] // 表名
         _Column     =>    ['required'] // 列名
         _Type       =>    ['required'] // 类型
-        _Default    =>    ['']         // 默认值
+        _Default    =>    []         // 默认值
         _Describe   =>    ['required'] // 描述
-        _Verify     =>    ['']         // 验证规则
+        _Verify     =>    []         // 验证规则
         _Sort       =>    ['number']   // 排序
         _Display    =>    ['number']   // 客户端不可见
+        _Tag        =>    []           // 
     
    	// 配置表字段描述
         _Table      =>    表名        // 表名
@@ -257,6 +269,7 @@
         _Verify     =>    验证规则     // 验证规则
         _Sort       =>    排序        // 排序
         _Display    =>    客户端不可见 // 客户端不可见
+        _Tag        =>    标签        // 标签
     
 ####注：
     
