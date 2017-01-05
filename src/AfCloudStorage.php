@@ -671,6 +671,14 @@ class AfCloudStorage
 
             if( '' == $sErroeMsg)
             {
+                foreach ($arrPostData as $sKey => $vVal)
+                {
+                    if ('' != @$arrDataDefault[$sKey] && '' == $vVal)
+                    {
+                        $arrPostData[$sKey] = $arrDataDefault[$sKey];
+                    }
+                }
+
                 $validator   = app( 'validator' )->make( $arrPostData, $arrDataRule );
 
                 if( $validator->passes() )
@@ -678,10 +686,6 @@ class AfCloudStorage
                     // 转换字段类型
                     foreach ($arrPostData as $sKey => $vVal)
                     {
-                        if( '' != @$arrDataDefault[$sKey] && '' == $vVal )
-                        {
-                            $arrPostData[$sKey] = $arrDataDefault[$sKey];
-                        }
                         // 类型验证
                         if( in_array( $arrDataType[ $sKey ] ,AfCloudStorageConst::$m_arr_StrData ) )
                         {
