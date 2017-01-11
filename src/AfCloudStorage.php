@@ -491,7 +491,7 @@ class AfCloudStorage
             {
                 $arrId = explode('.', $id);
 
-                $arrTablesData['updateAt'] = date('Y-m-d H:i:s', time());
+                $arrTablesData['updateAt'] = time();
 
                 if( ! empty( $arrId[1] ) )
                 {
@@ -506,7 +506,7 @@ class AfCloudStorage
             }
             else
             {
-                $arrTablesData['createAt'] = date('Y-m-d H:i:s', time());
+                $arrTablesData['createAt'] = time();
                 $arrTablesData['_afid']    = $this->GetAfid();
                 $nRet = $this->m_oDBLink->insert( $arrTablesData );
 
