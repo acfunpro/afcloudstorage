@@ -80,7 +80,7 @@ class AfCloudStorage
                 // 获取sum num max min avg值
                 $result = $this->_GetDBGetData();
 
-                $this->_GetDBOtherData();
+                $this->_GetDBOtherData( $result );
 
                 $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
 
@@ -817,10 +817,45 @@ class AfCloudStorage
      * @param string $id
      * @return array
      */
-    private function _GetDBOtherData()
+    private function _GetDBOtherData( & $result = [] )
     {
         $arrOther = $this->_GetArrDataTosKey('_afOther');
 
+
+        if( array_key_exists( 'order' , $arrOther ) )
+        {
+            if( CLib::IsArrayWithKeys( $arrOther['order'] ) )
+            {
+                if( 'asc' == $arrOther['order'][1] )
+                {
+                    $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'asc' );
+                }
+                else
+                {
+                    $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'desc' );
+                }
+            }
+            else
+            {
+                $this->m_oDBLink->orderBy( $arrOther['order'] , 'desc' );
+            }
+        }
+
+        if( array_key_exists( 'group' , $arrOther ) )
+        {
+            if( CLib::IsExistingString( $arrOther['group'] ) )
+            {
+                $this->m_oDBLink->groupBy( $arrOther['group'] );
+            }
+        }
+
+        if( array_key_exists( 'num' , $arrOther ) )
+        {
+            if( CLib::IsExistingString( @$arrOther['num'] ) )
+            {
+                $result['group_num'] = count( $this->m_oDBLink->get() );
+            }
+        }
         if( ! array_key_exists( 'limit' , $arrOther ) )
         {
             $this->m_oDBLink->take( $this->m_itake );
@@ -838,33 +873,6 @@ class AfCloudStorage
                 else
                 {
                     $this->m_oDBLink->take( intval( $arrOther['limit'] ) );
-                }
-            }
-
-            if( array_key_exists( 'order' , $arrOther ) )
-            {
-                if( CLib::IsArrayWithKeys( $arrOther['order'] ) )
-                {
-                    if( 'asc' == $arrOther['order'][1] )
-                    {
-                        $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'asc' );
-                    }
-                    else
-                    {
-                        $this->m_oDBLink->orderBy( $arrOther['order'][0] , 'desc' );
-                    }
-                }
-                else
-                {
-                    $this->m_oDBLink->orderBy( $arrOther['order'] , 'desc' );
-                }
-            }
-
-            if( array_key_exists( 'group' , $arrOther ) )
-            {
-                if( CLib::IsExistingString( $arrOther['group'] ) )
-                {
-                    $this->m_oDBLink->groupBy( $arrOther['group'] );
                 }
             }
 
