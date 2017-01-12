@@ -853,9 +853,17 @@ class AfCloudStorage
         {
             if( CLib::IsExistingString( @$arrOther['num'] ) )
             {
-                $result['group_num'] = count( $this->m_oDBLink->get() );
+                $arrResultColumn = $this->GetTablesColumn(true);
+
+                if( CLib::IsArrayWithKeys( $arrResultColumn ) )
+                {
+                    $arrDisplayColumn = array_merge( $arrResultColumn, ['_afid','createAt','updateAt'] );
+
+                    $result['num'] = count( $this->m_oDBLink->get( $arrDisplayColumn ) );
+                }
             }
         }
+
         if( ! array_key_exists( 'limit' , $arrOther ) )
         {
             $this->m_oDBLink->take( $this->m_itake );

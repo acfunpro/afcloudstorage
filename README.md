@@ -164,8 +164,8 @@
 				{"order",["sort","asc"]}   // 正序
 		   // groupby sid
 		_afOther = {"group":"sid"}
+		   // 获取排序后的数量
 		_afOther = {"group":"sid","num":"1"}
-		返回group_num group后的数量
 			// id为2的数据total字段递增
 		_afWhere={"id":"2"}&_afOther={"inc","total"}        // 递增 1
 		_afWhere={"id":"2"}&_afOther={"inc",["total","5"]}    // 递增 5
