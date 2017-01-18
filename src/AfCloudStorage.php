@@ -414,7 +414,7 @@ class AfCloudStorage
     private function _Init()
     {
         // 数据过滤
-        $this->m_arrInputData = clean( Input::all() , array('Attr.EnableID' => true) );
+        $this->m_arrInputData = Input::all();
 
         // 验证有效的Key(下标)
         $this->_IsArrKey($this->m_arrInputData);
