@@ -30,7 +30,7 @@
 	public function handle($request, Closure $next)
 	{
 		$arrInputData = Input::all();
-		if( !empty( $arrInputData[ '_afClass' ] ) && ! preg_match( '/[^\w\-]/' , $arrInputData[ '_afClass' ] ) )
+		if( !empty( $arrInputData[ '_afClass' ] ) && ! preg_match( '/[^\w\-]/' , $arrInputData[ '_afClass' ] ) && !empty( $arrInputData[ '_afForm' ] ) && Config::get('app.afcloud.form') == $arrInputData[ '_afForm' ] )
 		{
 			return $next($request);
 		}
