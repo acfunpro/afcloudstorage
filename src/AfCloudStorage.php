@@ -259,6 +259,7 @@ class AfCloudStorage
         $arrTablesColumn = array();
 
         $objTablesData = DB::collection( AfCloudStorageConst::$m_str_SetupTablesName );
+
         $objTablesData->orderBy('_Sort','desc');
 
         if( $this->m_sDBTableName == AfCloudStorageConst::$m_str_SetupTablesName )
@@ -292,7 +293,6 @@ class AfCloudStorage
         {
             $arrTablesColumn = $objTablesData->get();
         }
-
         $this->m_sRequestType            = 'Column';
         $this->m_arrOutputData['data']   = $arrTablesColumn;
         $this->_SaveLog();
@@ -873,14 +873,17 @@ class AfCloudStorage
         {
             if( array_key_exists( 'limit' , $arrOther ) )
             {
-                if( CLib::IsArrayWithKeys( $arrOther['limit'] ) )
+                if( 'all' != $arrOther['limit'] )
                 {
-                    $this->m_oDBLink->skip( intval( $arrOther['limit'][0] ) );
-                    $this->m_oDBLink->take( intval( $arrOther['limit'][1] ) );
-                }
-                else
-                {
-                    $this->m_oDBLink->take( intval( $arrOther['limit'] ) );
+                    if( CLib::IsArrayWithKeys( $arrOther['limit'] ) )
+                    {
+                        $this->m_oDBLink->skip( intval( $arrOther['limit'][0] ) );
+                        $this->m_oDBLink->take( intval( $arrOther['limit'][1] ) );
+                    }
+                    else
+                    {
+                        $this->m_oDBLink->take( intval( $arrOther['limit'] ) );
+                    }
                 }
             }
 

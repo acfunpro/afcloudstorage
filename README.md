@@ -156,6 +156,8 @@
 		_afWhere = {"sort":["nbw",["1","10"]]}   // 返回sort为 1到10 之外的数据
 		
 		
+		   // 返回全部数据
+		_afOther = {"limit":"all"}
 		   // 返回0到10条数据
 		_afOther = {"limit":"10"}
 				{"limit":["0","10"]}
