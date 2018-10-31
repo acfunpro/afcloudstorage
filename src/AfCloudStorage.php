@@ -209,7 +209,7 @@ class AfCloudStorage
 
         if( $this->_CheckStrClass() )
         {
-            $arrId = explode('.', $id);
+            $arrId = $this->_getValue( $id );
 
             if( AfCloudStorageConst::$m_str_SetupTablesName != $this->m_sDBTableName || 'Index' != $this->m_sRequestForm )
             {
@@ -489,7 +489,7 @@ class AfCloudStorage
 
             if( '' != $id )
             {
-                $arrId = explode('.', $id);
+                $arrId = $this->_getValue( $id );
 
                 $arrTablesData['updateAt'] = time();
 
@@ -619,7 +619,7 @@ class AfCloudStorage
 
                             if( '' != $id )
                             {
-                                $arrId = explode('.', $id);
+                                $arrId = $this->_getValue( $id );
 
                                 if( ! empty( $arrId[1] ) )
                                 {
@@ -641,7 +641,7 @@ class AfCloudStorage
 
                                 if( '' != $id )
                                 {
-                                    $arrId = explode('.', $id);
+                                    $arrId = $this->_getValue( $id );
 
                                     if( ! empty( $arrId[1] ) )
                                     {
@@ -797,7 +797,7 @@ class AfCloudStorage
 
         if( CLib::IsExistingString( $id ) || CLib::SafeIntVal( $id ))
         {
-            $arrId = explode('.', $id);
+            $arrId = $this->_getValue( $id );
 
             if( ! empty( $arrId[1] ) )
             {
@@ -1108,6 +1108,38 @@ class AfCloudStorage
         }
 
         return $bRtn;
+    }
+
+    private function _getValue( $id )
+    {
+        $arrId = [];
+
+        $first = stripos($id ,'`');
+        $last = strripos($id ,'`');
+
+
+        // 参数为  `$id` 不做拆解
+        if($first == 0 && $last+1 == strlen($id))
+        {
+            $arrId[0] = substr($id,1,strlen($id)-2);
+        }
+        else
+        {
+            $len = strpos( $id, '.' );
+
+            // 参数中不存在  .  不做拆解
+            if( $len === false ){
+                $arrId[0] = $id;
+            }
+            else
+            {
+            // 拆解参数
+                $arrId[0] = substr( $id, 0, $len );
+                $arrId[1] = substr( $id, $len + 1 );
+            }
+        }
+
+        return $arrId;
     }
 
 
